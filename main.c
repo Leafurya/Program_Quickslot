@@ -7,6 +7,7 @@
 
 LRESULT CALLBACK MainWndProc(HWND,UINT,WPARAM,LPARAM);
 void GetProcessPath();
+void GetOpenedWindow();
 
 HWND mainWnd;
 RECT mainRect;
@@ -62,6 +63,7 @@ LRESULT CALLBACK MainWndProc(HWND hWnd,UINT iMessage,WPARAM wParam,LPARAM lParam
 	HWND hWin;
 	WINDOWINFO wInfo;
 	int i;
+	DWORD pID;
 	switch(iMessage) {
 		case WM_CREATE:
 			SendMessage(hWnd,WM_SIZE,0,0);
@@ -82,14 +84,8 @@ LRESULT CALLBACK MainWndProc(HWND hWnd,UINT iMessage,WPARAM wParam,LPARAM lParam
 					GetProcessPath();
 					break;
 				case VK_RETURN:
-					//CreateProcess(NULL,name,NULL,NULL,FALSE,0,NULL,NULL,&si,&pi);
-					hWin=FindWindow(NULL,"Leafurya/C-Library: c lib - Chrome");
-					GetWindowInfo(hWin,&wInfo);
-					printf("%d %d %d %d\n",wInfo.rcWindow.left,wInfo.rcWindow.top,wInfo.rcWindow.right,wInfo.rcWindow.bottom);
-					for(i=0;i<1920;i++){
-						SetWindowPos(hWin,HWND_NOTOPMOST,i,wInfo.rcWindow.top,wInfo.rcClient.right,wInfo.rcClient.bottom,SWP_NOMOVE|SWP_NOSIZE);
-						//Sleep(100);
-					}
+					GetOpenedWindow();
+					printf("================================\n");
 					break;
 			}
 			return 0;
@@ -112,8 +108,8 @@ void GetProcessPath(){
 	bGet=Process32First(hSnap,&ppe);
 	printf("%d\n",bGet);
 	while(bGet){
-		printf("name: %s  |",ppe.szExeFile);
 		hProc=OpenProcess(PROCESS_QUERY_INFORMATION|PROCESS_VM_READ,FALSE,ppe.th32ProcessID);
+		printf("hProc: %d  |",ppe.th32ProcessID);
 		if(hProc){
 			GetModuleFileNameEx(hProc,NULL,path,1024);
 			printf("path: %s\n",path);
@@ -122,5 +118,33 @@ void GetProcessPath(){
 		bGet=Process32Next(hSnap,&ppe);
 	}
 	CloseHandle(hSnap); 
+}
+/*
+열려있는 프로그램 감지하기-
+전체 프로세스에서  
+*/
+void GetOpenedWindow(){
+	WINDOWINFO wInfo;
+	DWORD pID;
+	HANDLE hProc;
+	HWND tempWin=FindWindow(NULL,NULL);
+	char path[1024]={0};
+	int i;
+	while(tempWin!=NULL){
+		if(GetParent(tempWin)==NULL){
+			GetWindowInfo(tempWin,&wInfo);
+			if((wInfo.dwExStyle&0x900)==0x900){
+				printf("%X|\t",wInfo.dwExStyle);
+				GetWindowThreadProcessId(tempWin,&pID);
+				hProc=OpenProcess(PROCESS_QUERY_INFORMATION|PROCESS_VM_READ,FALSE,pID);
+				if(hProc){
+					GetModuleFileNameEx(hProc,NULL,path,1024);
+					printf("hProc: %d  |path: %s\n",pID,path);
+					CloseHandle(hProc);
+				}
+			}
+		}
+		tempWin=GetWindow(tempWin,GW_HWNDNEXT);
+	} 
 }
 
