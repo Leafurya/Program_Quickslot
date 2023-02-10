@@ -11,7 +11,7 @@ ResourceIncludes=
 MakeIncludes=
 Compiler=
 CppCompiler=
-Linker=-ldoublebuffer_@@_-lpsapi_@@_
+Linker=-ldoublebuffer_@@_-lpsapi_@@_-lstrproc2_@@_
 IsCpp=0
 Icon=
 ExeOutput=
@@ -29,7 +29,7 @@ IncludeVersionInfo=0
 SupportXPThemes=0
 CompilerSet=0
 CompilerSettings=0000000000000000000000000
-UnitCount=1
+UnitCount=4
 
 [VersionInfo]
 Major=1
@@ -52,6 +52,36 @@ SyncProduct=1
 
 [Unit1]
 FileName=main.c
+CompileCpp=0
+Folder=
+Compile=1
+Link=1
+Priority=1000
+OverrideBuildCmd=0
+BuildCmd=
+
+[Unit2]
+FileName=data.h
+CompileCpp=0
+Folder=
+Compile=1
+Link=1
+Priority=1000
+OverrideBuildCmd=0
+BuildCmd=
+
+[Unit3]
+FileName=quickslot.h
+CompileCpp=0
+Folder=
+Compile=0
+Link=0
+Priority=1000
+OverrideBuildCmd=0
+BuildCmd=
+
+[Unit4]
+FileName=data.c
 CompileCpp=0
 Folder=
 Compile=1

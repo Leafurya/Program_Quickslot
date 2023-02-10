@@ -4,15 +4,22 @@
 #include <stdlib.h>
 #include <tlhelp32.h>
 #include <psapi.h>
+#include <strproc2.h>
+
+#include "quickslot.h"
 
 LRESULT CALLBACK MainWndProc(HWND,UINT,WPARAM,LPARAM);
+BOOL CALLBACK EnumWindowsProc(HWND,LPARAM);
+
 void GetProcessPath();
 void GetOpenedWindow();
 
 HWND mainWnd;
 RECT mainRect;
 HINSTANCE g_hInst;
-LPSTR mainWndClass="mainWndClass";
+LPSTR mainWndClass="ProgramQuickSlot";
+
+QuickSlot quickSlot[VK_F24-VK_F1+1];
 
 int APIENTRY WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance
 		  ,LPSTR lpszCmdParam,int nCmdShow)
@@ -67,6 +74,7 @@ LRESULT CALLBACK MainWndProc(HWND hWnd,UINT iMessage,WPARAM wParam,LPARAM lParam
 	switch(iMessage) {
 		case WM_CREATE:
 			SendMessage(hWnd,WM_SIZE,0,0);
+			EnumWindows(EnumWindowsProc,(LPARAM)NULL);
 			return 0;
 		case WM_SIZE:
 			if(wParam!=SIZE_MINIMIZED){
@@ -94,6 +102,55 @@ LRESULT CALLBACK MainWndProc(HWND hWnd,UINT iMessage,WPARAM wParam,LPARAM lParam
 			return 0;
 	}
 	return(DefWindowProc(hWnd,iMessage,wParam,lParam));
+}
+	BOOL IsFilteredWindow(char *name){
+		const char *windowFilter[]={"SystemSettings.exe","ApplicationFrameHost.exe","TextInputHost.exe","Program_Quickslot.exe"};
+		int i;
+		for(i=0;i<(sizeof(windowFilter)/sizeof(char *));i++){
+			if(!strcmp(name,windowFilter[i])){
+				return TRUE;
+			}
+		}
+		return FALSE;
+	}
+BOOL CALLBACK EnumWindowsProc(HWND hWnd,LPARAM lParam){
+	//printf("%d\n",hWnd);
+	BOOL isVisible=IsWindowVisible(hWnd);
+	DWORD exStyle=GetWindowLong(hWnd,GWL_EXSTYLE);
+	BOOL isAppWindow=(exStyle&WS_EX_APPWINDOW);
+	BOOL isToolWindow=(exStyle&WS_EX_TOOLWINDOW);
+	BOOL isOwned=GetWindow(hWnd,GW_OWNER)?TRUE:FALSE;
+	
+	WINDOWINFO wInfo;
+	DWORD pID;
+	HANDLE hProc;
+	char path[1024]={0};
+	STRING str;
+	int i;
+	char *progName;
+	
+	if(!isVisible){
+		return TRUE;
+	}
+	if(!(isAppWindow||(!isToolWindow&&!isOwned))){
+		return TRUE;
+	}
+	
+	GetWindowThreadProcessId(hWnd,&pID);
+	hProc=OpenProcess(PROCESS_QUERY_INFORMATION|PROCESS_VM_READ,FALSE,pID);
+	if(hProc){
+		GetModuleFileNameEx(hProc,NULL,path,1024);
+		str=Split(path,'\\');
+		progName=str.strings[str.size-1];
+		if(!IsFilteredWindow(progName)){
+			GetWindowInfo(hWnd,&wInfo);
+			//SendMessage(hWnd,WM_SIZE,SIZE_MINIMIZED,0);
+			printf("%d,(%d,%d)\tname:%s\npath: %s\n=================\n",IsZoomed(hWnd),wInfo.rcWindow.left,wInfo.rcWindow.top,progName,path);
+		}
+		CloseHandle(hProc);
+	}
+	
+	return TRUE;
 }
 void GetProcessPath(){
 	char bGet=FALSE;
@@ -133,8 +190,8 @@ void GetOpenedWindow(){
 	while(tempWin!=NULL){
 		if(GetParent(tempWin)==NULL){
 			GetWindowInfo(tempWin,&wInfo);
-			if((wInfo.dwExStyle&0x900)==0x900){
-				printf("%X|\t",wInfo.dwExStyle);
+			if(IsWindowVisible(tempWin)){
+				printf("%X\t|",wInfo.dwExStyle);
 				GetWindowThreadProcessId(tempWin,&pID);
 				hProc=OpenProcess(PROCESS_QUERY_INFORMATION|PROCESS_VM_READ,FALSE,pID);
 				if(hProc){
