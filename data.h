@@ -3,12 +3,12 @@
 
 #include <windows.h>
 
-typedef struct _data{
+typedef struct _item{
 	char path[1024];
 	char maximized;
 	int xpos, ypos;
-}Data, *LPData;
+}Item, *LPItem;
 
-Data CreateData(char *,char,RECT);
+Item CreateItem(char *,char,RECT);
 
 #endif

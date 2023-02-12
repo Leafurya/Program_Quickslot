@@ -5,21 +5,27 @@
 #include <tlhelp32.h>
 #include <psapi.h>
 #include <strproc2.h>
+#include <ctrlmanager.h>
 
 #include "quickslot.h"
+#include "ctrls.h"
+
+#define TIMER_INPUT	0
 
 LRESULT CALLBACK MainWndProc(HWND,UINT,WPARAM,LPARAM);
 BOOL CALLBACK EnumWindowsProc(HWND,LPARAM);
 
-void GetProcessPath();
-void GetOpenedWindow();
+void SaveCtrlsCommandFunc(WPARAM,LPARAM);
 
 HWND mainWnd;
 RECT mainRect;
 HINSTANCE g_hInst;
 LPSTR mainWndClass="ProgramQuickSlot";
 
-QuickSlot quickSlot[VK_F24-VK_F1+1];
+CtrlManager cm;
+SaveCtrls sc;
+
+QuickSlot quickslot[KEYCOUNT];
 
 int APIENTRY WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance
 		  ,LPSTR lpszCmdParam,int nCmdShow)
@@ -67,18 +73,31 @@ LRESULT CALLBACK MainWndProc(HWND hWnd,UINT iMessage,WPARAM wParam,LPARAM lParam
 {
 	HDC hdc;
 	PAINTSTRUCT ps;
-	HWND hWin;
-	WINDOWINFO wInfo;
-	int i;
-	DWORD pID;
+	int i,index;
 	switch(iMessage) {
 		case WM_CREATE:
 			SendMessage(hWnd,WM_SIZE,0,0);
-			EnumWindows(EnumWindowsProc,(LPARAM)NULL);
+			
+			InitCtrlManager(&cm,&mainRect);
+			CreateSaveCtrls(&sc,hWnd,g_hInst);
+			RegistCtrlGroup(&cm,&sc,ID_SAVECTRLS,sizeof(SaveCtrls),MoveSaveCtrls);
+			SetNowCtrlGroup(&cm,ID_SAVECTRLS);
+			
+			if(!LoadQuickslot(&quickslot,sizeof(quickslot))){
+				memset(quickslot,0,sizeof(quickslot));
+			}
+			for(index=0;index<KEYCOUNT;index++){
+				printf("index:%d===========\n",index);
+				for(i=0;i<quickslot[index].itemCount;i++){
+					printf("max: %d| (%d,%d) |path: %s\n",quickslot[index].item[i].maximized,quickslot[index].item[i].xpos,quickslot[index].item[i].ypos,quickslot[index].item[i].path);
+				}
+			}
+			SetTimer(hWnd,TIMER_INPUT,1,NULL);
 			return 0;
 		case WM_SIZE:
 			if(wParam!=SIZE_MINIMIZED){
 				GetClientRect(hWnd,&mainRect);
+				CallMoveFunc(cm,mainRect);
 			}
 			return 0;
 		case WM_PAINT:
@@ -88,16 +107,32 @@ LRESULT CALLBACK MainWndProc(HWND hWnd,UINT iMessage,WPARAM wParam,LPARAM lParam
 			return 0;
 		case WM_KEYDOWN:
 			switch(wParam){
-				case VK_SPACE:
-					GetProcessPath();
-					break;
 				case VK_RETURN:
-					GetOpenedWindow();
+					EnumWindows(EnumWindowsProc,(LPARAM)NULL);
 					printf("================================\n");
 					break;
 			}
 			return 0;
+		case WM_TIMER:
+			switch(wParam){
+				case TIMER_INPUT:
+					if((index=GetSlotIndex())!=-1){
+						if(SpreadQuickslot(quickslot[index])){
+							printf("empty slot\n");
+						}
+					}
+					break;
+			}
+			return 0;
+		case WM_COMMAND:
+			switch((int)(LOWORD(wParam)/100)){
+				case ID_SAVECTRLS:
+					SaveCtrlsCommandFunc(wParam,lParam);
+					break;
+			}
+			return 0;
 		case WM_DESTROY:
+			DestroyCtrlManager(&cm);
 			PostQuitMessage(0);
 			return 0;
 	}
@@ -115,6 +150,8 @@ LRESULT CALLBACK MainWndProc(HWND hWnd,UINT iMessage,WPARAM wParam,LPARAM lParam
 	}
 BOOL CALLBACK EnumWindowsProc(HWND hWnd,LPARAM lParam){
 	//printf("%d\n",hWnd);
+	QuickSlot *lpQuickslot=(QuickSlot *)lParam;
+	
 	BOOL isVisible=IsWindowVisible(hWnd);
 	DWORD exStyle=GetWindowLong(hWnd,GWL_EXSTYLE);
 	BOOL isAppWindow=(exStyle&WS_EX_APPWINDOW);
@@ -145,63 +182,28 @@ BOOL CALLBACK EnumWindowsProc(HWND hWnd,LPARAM lParam){
 		if(!IsFilteredWindow(progName)){
 			GetWindowInfo(hWnd,&wInfo);
 			//SendMessage(hWnd,WM_SIZE,SIZE_MINIMIZED,0);
-			printf("%d,(%d,%d)\tname:%s\npath: %s\n=================\n",IsZoomed(hWnd),wInfo.rcWindow.left,wInfo.rcWindow.top,progName,path);
+			lpQuickslot->item[lpQuickslot->itemCount++]=CreateItem(path,IsZoomed(hWnd),wInfo.rcWindow);
+			//printf("%d,(%d,%d)\tname:%s\npath: %s\n=================\n",IsZoomed(hWnd),wInfo.rcWindow.left,wInfo.rcWindow.top,progName,path);
 		}
+		DeleteString(&str);
 		CloseHandle(hProc);
 	}
 	
 	return TRUE;
 }
-void GetProcessPath(){
-	char bGet=FALSE;
-	char buf[260]="";
-	HANDLE hSnap;
-	HANDLE hProc;
-	PROCESSENTRY32 ppe;
-	char path[1024]={0};
+void SaveCtrlsCommandFunc(WPARAM wParam,LPARAM lParam){
+	int index=wParam-SAVECTRLS_BT_ORIGIN;
+	int i; 
 	
-	hSnap=CreateToolhelp32Snapshot(TH32CS_SNAPALL,0);
-	ppe.dwSize=sizeof(PROCESSENTRY32);
-	bGet=Process32First(hSnap,&ppe);
-	printf("%d\n",bGet);
-	while(bGet){
-		hProc=OpenProcess(PROCESS_QUERY_INFORMATION|PROCESS_VM_READ,FALSE,ppe.th32ProcessID);
-		printf("hProc: %d  |",ppe.th32ProcessID);
-		if(hProc){
-			GetModuleFileNameEx(hProc,NULL,path,1024);
-			printf("path: %s\n",path);
-			CloseHandle(hProc);
+	printf("index:%d\n",index);
+	if(quickslot[index].itemCount==0){
+		EnumWindows(EnumWindowsProc,(LPARAM)&quickslot[index]);
+		for(i=0;i<quickslot[index].itemCount;i++){
+			printf("max: %d| (%d,%d) |path: %s\n",quickslot[index].item[i].maximized,quickslot[index].item[i].xpos,quickslot[index].item[i].ypos,quickslot[index].item[i].path);
 		}
-		bGet=Process32Next(hSnap,&ppe);
+		printf("done: %d\n",SaveQuickslot(quickslot,sizeof(quickslot)));
 	}
-	CloseHandle(hSnap); 
+	else{
+		printf("no place\n");
+	}
 }
-/*
-열려있는 프로그램 감지하기-
-전체 프로세스에서  
-*/
-void GetOpenedWindow(){
-	WINDOWINFO wInfo;
-	DWORD pID;
-	HANDLE hProc;
-	HWND tempWin=FindWindow(NULL,NULL);
-	char path[1024]={0};
-	int i;
-	while(tempWin!=NULL){
-		if(GetParent(tempWin)==NULL){
-			GetWindowInfo(tempWin,&wInfo);
-			if(IsWindowVisible(tempWin)){
-				printf("%X\t|",wInfo.dwExStyle);
-				GetWindowThreadProcessId(tempWin,&pID);
-				hProc=OpenProcess(PROCESS_QUERY_INFORMATION|PROCESS_VM_READ,FALSE,pID);
-				if(hProc){
-					GetModuleFileNameEx(hProc,NULL,path,1024);
-					printf("hProc: %d  |path: %s\n",pID,path);
-					CloseHandle(hProc);
-				}
-			}
-		}
-		tempWin=GetWindow(tempWin,GW_HWNDNEXT);
-	} 
-}
-

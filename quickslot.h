@@ -2,14 +2,19 @@
 #define _quickslot__h_
 
 #include "data.h"
-#define SLOT_MAXSIZE	10
+
+#define ITEM_MAXSIZE	10
+#define KEYCOUNT	12
 
 typedef struct _quickslot{
-	Data slotData[SLOT_MAXSIZE];
+	Item item[ITEM_MAXSIZE];
 	char itemCount;
-}QuickSlot, *LPQuickSlot;
+}QuickSlot;
 //slot key is VK-VK_F1
 
-void LoadSlot(LPQuickSlot);
+char LoadQuickslot(QuickSlot **,int);
+char SaveQuickslot(QuickSlot *,int);
+int GetSlotIndex();
+char SpreadQuickslot(QuickSlot);
 
 #endif
