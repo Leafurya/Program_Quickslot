@@ -12,7 +12,7 @@ typedef struct _quickslot{
 }QuickSlot;
 //slot key is VK-VK_F1
 
-char LoadQuickslot(QuickSlot **,int);
+char LoadQuickslot(QuickSlot *[],int);
 char SaveQuickslot(QuickSlot *,int);
 int GetSlotIndex();
 char SpreadQuickslot(QuickSlot);

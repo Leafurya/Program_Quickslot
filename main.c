@@ -74,6 +74,7 @@ LRESULT CALLBACK MainWndProc(HWND hWnd,UINT iMessage,WPARAM wParam,LPARAM lParam
 	HDC hdc;
 	PAINTSTRUCT ps;
 	int i,index;
+	POINT pos;
 	switch(iMessage) {
 		case WM_CREATE:
 			SendMessage(hWnd,WM_SIZE,0,0);
@@ -93,6 +94,7 @@ LRESULT CALLBACK MainWndProc(HWND hWnd,UINT iMessage,WPARAM wParam,LPARAM lParam
 				}
 			}
 			SetTimer(hWnd,TIMER_INPUT,1,NULL);
+			printf("%d,%d,%d\n",sizeof(HWND),sizeof(DWORD),sizeof(LPARAM));
 			return 0;
 		case WM_SIZE:
 			if(wParam!=SIZE_MINIMIZED){
@@ -108,7 +110,7 @@ LRESULT CALLBACK MainWndProc(HWND hWnd,UINT iMessage,WPARAM wParam,LPARAM lParam
 		case WM_KEYDOWN:
 			switch(wParam){
 				case VK_RETURN:
-					EnumWindows(EnumWindowsProc,(LPARAM)NULL);
+					SendMessage(hWnd,WM_SIZE,SIZE_MAXIMIZED,0);
 					printf("================================\n");
 					break;
 			}
@@ -121,6 +123,10 @@ LRESULT CALLBACK MainWndProc(HWND hWnd,UINT iMessage,WPARAM wParam,LPARAM lParam
 							printf("empty slot\n");
 						}
 					}
+//					if(GetKeyState(VK_LBUTTON)&0x8000){
+//						GetCursorPos(&pos);
+//						printf("%d,%d\n",pos.x,pos.y);
+//					}
 					break;
 			}
 			return 0;
@@ -165,6 +171,7 @@ BOOL CALLBACK EnumWindowsProc(HWND hWnd,LPARAM lParam){
 	STRING str;
 	int i;
 	char *progName;
+	RECT rect;
 	
 	if(!isVisible){
 		return TRUE;
@@ -182,8 +189,16 @@ BOOL CALLBACK EnumWindowsProc(HWND hWnd,LPARAM lParam){
 		if(!IsFilteredWindow(progName)){
 			GetWindowInfo(hWnd,&wInfo);
 			//SendMessage(hWnd,WM_SIZE,SIZE_MINIMIZED,0);
+			for(i=0;i<lpQuickslot->itemCount;i++){
+				if(!strcmp(lpQuickslot->item[i].path,path)){
+					DeleteString(&str);
+					CloseHandle(hProc);
+					return TRUE;
+				}
+			}
+			GetWindowRect(hWnd,&rect);
 			lpQuickslot->item[lpQuickslot->itemCount++]=CreateItem(path,IsZoomed(hWnd),wInfo.rcWindow);
-			//printf("%d,(%d,%d)\tname:%s\npath: %s\n=================\n",IsZoomed(hWnd),wInfo.rcWindow.left,wInfo.rcWindow.top,progName,path);
+			printf("(%d,%d)\n",rect.left,rect.top);
 		}
 		DeleteString(&str);
 		CloseHandle(hProc);
