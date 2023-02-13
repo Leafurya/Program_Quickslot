@@ -1,8 +1,8 @@
 #include "quickslot.h"
 #include <stdlib.h>
 #include <stdio.h>
-
-
+#include <shellapi.h>
+#include <psapi.h>
 
 int GetSlotIndex(int key){
 	int i;
@@ -48,19 +48,21 @@ char SaveQuickslot(QuickSlot *pQuickslot,int size){
 	return 1;
 }
 	typedef struct _target{
-		DWORD pid;
+		char *path;
 		HWND hWnd;
 	}Target;
 BOOL CALLBACK GetHwndProc(HWND hWnd,LPARAM lParam){
 	//printf("%d\n",hWnd);
 	Target *target=(Target *)lParam;
-	DWORD pID;
-	
 	BOOL isVisible=IsWindowVisible(hWnd);
 	DWORD exStyle=GetWindowLong(hWnd,GWL_EXSTYLE);
 	BOOL isAppWindow=(exStyle&WS_EX_APPWINDOW);
 	BOOL isToolWindow=(exStyle&WS_EX_TOOLWINDOW);
 	BOOL isOwned=GetWindow(hWnd,GW_OWNER)?TRUE:FALSE;
+	
+	DWORD pID;
+	HANDLE hProc;
+	char path[1024]={0};
 	
 	if(!isVisible){
 		return TRUE;
@@ -70,47 +72,47 @@ BOOL CALLBACK GetHwndProc(HWND hWnd,LPARAM lParam){
 	}
 	
 	GetWindowThreadProcessId(hWnd,&pID);
-	printf("pID: %d\ttarget->pid:%d\n",pID,target->pid);
-	if(pID==target->pid){
-		target->hWnd=hWnd;
-		printf("target->hWnd:%d\n",target->hWnd);
-		
-		return FALSE;
+	hProc=OpenProcess(PROCESS_QUERY_INFORMATION|PROCESS_VM_READ,FALSE,pID);
+	if(hProc){
+		GetModuleFileNameEx(hProc,NULL,path,1024);
+		if(!strcmp(path,target->path)){
+			target->hWnd=hWnd;
+			CloseHandle(hProc);
+			return FALSE;
+		}
 	}
-	
+	CloseHandle(hProc);
 	return TRUE;
 }
 char SpreadQuickslot(QuickSlot slot){
 	int i;
-	STARTUPINFO si={0,};
-	PROCESS_INFORMATION pi={0,};
 	Target target;
 	Item item;
+	SHELLEXECUTEINFOA info[ITEM_MAXSIZE]={0,};
 	RECT rect;
 	
+	ZeroMemory(info,sizeof(info));
 	if(slot.itemCount!=0){
 		for(i=0;i<slot.itemCount;i++){
 			item=slot.item[i];
-			memset(&si,0,sizeof(STARTUPINFO));
-			si.cb=sizeof(STARTUPINFO);
-			si.dwX=item.xpos;
-			si.dwY=item.ypos;
-			si.dwFlags=STARTF_USEPOSITION|STARTF_USESHOWWINDOW;
-			si.wShowWindow=item.maximized?SW_SHOWMAXIMIZED:SW_SHOW;
 			
-			CreateProcess( NULL,   // No module name (use command line)
-					        item.path,        // Command line
-					        NULL,           // Process handle not inheritable
-					        NULL,           // Thread handle not inheritable
-					        FALSE,          // Set handle inheritance to FALSE
-					        0,              // No creation flags
-					        NULL,           // Use parent's environment block
-					        NULL,           // Use parent's starting directory 
-					        &si,            // Pointer to STARTUPINFO structure
-					        &pi );           // Pointer to PROCESS_INFORMATION structure
-			printf("%d,%d\n",si.dwX,si.dwY);
-			CloseHandle(pi.hProcess);
-			CloseHandle(pi.hThread);
+			info[i].cbSize = sizeof(SHELLEXECUTEINFO);
+	        info[i].fMask = NULL;
+	        info[i].hwnd = NULL;
+	        info[i].lpVerb = NULL;
+	        info[i].lpFile = item.path;
+	        info[i].lpParameters = NULL;
+	        info[i].lpDirectory = NULL;
+	        info[i].nShow = SW_MAXIMIZE;
+	        info[i].hInstApp = NULL;
+			
+			ShellExecuteEx(&info[i]);
+			EnumWindows(GetHwndProc,(LPARAM)&target);
+			GetWindowRect(target.hWnd,&rect);
+			SetWindowPos(target.hWnd,HWND_NOTOPMOST,rect.left,rect.top,rect.right-rect.left,rect.bottom-rect.top,SWP_SHOWWINDOW);
+			if(item.maximized){
+				ShowWindow(target.hWnd,SW_SHOWMAXIMIZED);
+			}
 		}
 		return 0;
 	}
