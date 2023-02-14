@@ -63,6 +63,8 @@ BOOL CALLBACK GetHwndProc(HWND hWnd,LPARAM lParam){
 	DWORD pID;
 	HANDLE hProc;
 	char path[1024]={0};
+	char tpath[1024]={0};
+	
 	
 	if(!isVisible){
 		return TRUE;
@@ -70,16 +72,19 @@ BOOL CALLBACK GetHwndProc(HWND hWnd,LPARAM lParam){
 	if(!(isAppWindow||(!isToolWindow&&!isOwned))){
 		return TRUE;
 	}
-	
 	GetWindowThreadProcessId(hWnd,&pID);
 	hProc=OpenProcess(PROCESS_QUERY_INFORMATION|PROCESS_VM_READ,FALSE,pID);
 	if(hProc){
-		GetModuleFileNameEx(hProc,NULL,path,1024);
+		GetModuleFileNameEx(hProc,NULL,tpath,1024);
+		sprintf(path,"\"%s\"\0",tpath);
+		//printf("%s\n%s\n\n",path,target->path);
 		if(!strcmp(path,target->path)){
+			printf("hWnd:%d\n",hWnd);
 			target->hWnd=hWnd;
 			CloseHandle(hProc);
 			return FALSE;
 		}
+		ZeroMemory(path,sizeof(path));
 	}
 	CloseHandle(hProc);
 	return TRUE;
@@ -95,26 +100,44 @@ char SpreadQuickslot(QuickSlot slot){
 	if(slot.itemCount!=0){
 		for(i=0;i<slot.itemCount;i++){
 			item=slot.item[i];
-			
-			info[i].cbSize = sizeof(SHELLEXECUTEINFO);
-	        info[i].fMask = NULL;
-	        info[i].hwnd = NULL;
-	        info[i].lpVerb = NULL;
-	        info[i].lpFile = item.path;
-	        info[i].lpParameters = NULL;
-	        info[i].lpDirectory = NULL;
-	        info[i].nShow = SW_MAXIMIZE;
-	        info[i].hInstApp = NULL;
-			
-			ShellExecuteEx(&info[i]);
+			ShellExecute(NULL,"open",item.path,NULL,NULL,SW_SHOW);
+		}
+		Sleep(500);
+		for(i=0;i<slot.itemCount;i++){
+			item=slot.item[i];
+			target.path=item.path;
 			EnumWindows(GetHwndProc,(LPARAM)&target);
 			GetWindowRect(target.hWnd,&rect);
-			SetWindowPos(target.hWnd,HWND_NOTOPMOST,rect.left,rect.top,rect.right-rect.left,rect.bottom-rect.top,SWP_SHOWWINDOW);
+			MoveWindow(target.hWnd,item.xpos,item.ypos,rect.right-rect.left,rect.bottom-rect.top,TRUE);
+			printf("hWnd:%d\t%s\n",target.hWnd,item.path);
 			if(item.maximized){
 				ShowWindow(target.hWnd,SW_SHOWMAXIMIZED);
 			}
+			CloseHandle(target.hWnd);
 		}
 		return 0;
 	}
 	return 1;
+}
+void ShowItemList(QuickSlot slot,HWND list){
+	int i;
+	int listCount=SendMessage(list,LB_GETCOUNT,0,0);
+	
+	for(i=listCount;i>=0;i--){
+		if(SendMessage(list,LB_DELETESTRING,i,0)==-1){
+			printf("%s\n",strerror(errno));
+		}
+	}
+	for(i=0;i<slot.itemCount;i++){
+		SendMessage(list,LB_ADDSTRING,0,(LPARAM)slot.item[i].name);
+	}
+	
+	if(!i){
+		SendMessage(list,LB_ADDSTRING,0,(LPARAM)"EMPTY");
+	}
+}
+void ShowItemInfo(int index,Item item,HWND stText){
+	char info[2048]={0,};
+	sprintf(info,"F%d 슬롯\n\n경로:%s\n\n매개변수:%s",index,item.path,item.parameter?item.parameter:"non");
+	SetWindowText(stText,info);
 }

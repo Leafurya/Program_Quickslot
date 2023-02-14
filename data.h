@@ -5,10 +5,13 @@
 
 typedef struct _item{
 	char path[1024];
+	char name[256];
+	char parameter[1024];
 	char maximized;
 	int xpos, ypos;
+	int w,h;
 }Item, *LPItem;
 
-Item CreateItem(char *,char,RECT);
+Item CreateItem(char *,char *,char,RECT);
 
 #endif

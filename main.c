@@ -53,7 +53,7 @@ int APIENTRY WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance
 	freopen("CONOUT$", "w", stderr);
 
 	hWnd=CreateWindow(mainWndClass,mainWndClass,WS_OVERLAPPEDWINDOW,
-		  CW_USEDEFAULT,CW_USEDEFAULT,500,500,
+		  CW_USEDEFAULT,CW_USEDEFAULT,500,300,
 		  NULL,(HMENU)NULL,hInstance,NULL);
 	ShowWindow(hWnd,nCmdShow);
 
@@ -66,8 +66,9 @@ int APIENTRY WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance
 
 	return Message.wParam;
 }
-	void DrawMainWnd(HDC dbDC,RECT rt){
-		TextOut(dbDC,10,10,"hello",5);
+	void DrawMainWnd(HDC hdc,RECT rt){
+		FillRect(hdc,&rt,(HBRUSH)(COLOR_WINDOW));
+		SetBkMode(hdc,TRANSPARENT);
 	}
 LRESULT CALLBACK MainWndProc(HWND hWnd,UINT iMessage,WPARAM wParam,LPARAM lParam)
 {
@@ -75,10 +76,12 @@ LRESULT CALLBACK MainWndProc(HWND hWnd,UINT iMessage,WPARAM wParam,LPARAM lParam
 	PAINTSTRUCT ps;
 	int i,index;
 	POINT pos;
+	HWND wnd;
 	switch(iMessage) {
 		case WM_CREATE:
 			SendMessage(hWnd,WM_SIZE,0,0);
 			
+			CreateCtrlFont();
 			InitCtrlManager(&cm,&mainRect);
 			CreateSaveCtrls(&sc,hWnd,g_hInst);
 			RegistCtrlGroup(&cm,&sc,ID_SAVECTRLS,sizeof(SaveCtrls),MoveSaveCtrls);
@@ -90,7 +93,7 @@ LRESULT CALLBACK MainWndProc(HWND hWnd,UINT iMessage,WPARAM wParam,LPARAM lParam
 			for(index=0;index<KEYCOUNT;index++){
 				printf("index:%d===========\n",index);
 				for(i=0;i<quickslot[index].itemCount;i++){
-					printf("max: %d| (%d,%d) |path: %s\n",quickslot[index].item[i].maximized,quickslot[index].item[i].xpos,quickslot[index].item[i].ypos,quickslot[index].item[i].path);
+					printf("max: %d| (%d,%d)%s\t |path: %s\n",quickslot[index].item[i].maximized,quickslot[index].item[i].xpos,quickslot[index].item[i].ypos,quickslot[index].item[i].name,quickslot[index].item[i].path);
 				}
 			}
 			SetTimer(hWnd,TIMER_INPUT,1,NULL);
@@ -110,7 +113,9 @@ LRESULT CALLBACK MainWndProc(HWND hWnd,UINT iMessage,WPARAM wParam,LPARAM lParam
 		case WM_KEYDOWN:
 			switch(wParam){
 				case VK_RETURN:
-					SendMessage(hWnd,WM_SIZE,SIZE_MAXIMIZED,0);
+					wnd=FindWindow(NULL,"Ȩ");
+					printf("wnd: %d\n",wnd);
+					MoveWindow(wnd,0,0,1000,1000,TRUE);
 					printf("================================\n");
 					break;
 			}
@@ -123,10 +128,6 @@ LRESULT CALLBACK MainWndProc(HWND hWnd,UINT iMessage,WPARAM wParam,LPARAM lParam
 							printf("empty slot\n");
 						}
 					}
-//					if(GetKeyState(VK_LBUTTON)&0x8000){
-//						GetCursorPos(&pos);
-//						printf("%d,%d\n",pos.x,pos.y);
-//					}
 					break;
 			}
 			return 0;
@@ -167,6 +168,7 @@ BOOL CALLBACK EnumWindowsProc(HWND hWnd,LPARAM lParam){
 	WINDOWINFO wInfo;
 	DWORD pID;
 	HANDLE hProc;
+	char tpath[1024]={0};
 	char path[1024]={0};
 	STRING str;
 	int i;
@@ -188,37 +190,81 @@ BOOL CALLBACK EnumWindowsProc(HWND hWnd,LPARAM lParam){
 		progName=str.strings[str.size-1];
 		if(!IsFilteredWindow(progName)){
 			GetWindowInfo(hWnd,&wInfo);
+			sprintf(tpath,"\"%s\"",path);
+			printf("tpath: %s\n",tpath);
 			//SendMessage(hWnd,WM_SIZE,SIZE_MINIMIZED,0);
 			for(i=0;i<lpQuickslot->itemCount;i++){
-				if(!strcmp(lpQuickslot->item[i].path,path)){
+				if(!strcmp(lpQuickslot->item[i].path,tpath)){
 					DeleteString(&str);
 					CloseHandle(hProc);
 					return TRUE;
 				}
 			}
 			GetWindowRect(hWnd,&rect);
-			lpQuickslot->item[lpQuickslot->itemCount++]=CreateItem(path,IsZoomed(hWnd),wInfo.rcWindow);
+			lpQuickslot->item[lpQuickslot->itemCount++]=CreateItem(path,NULL,IsZoomed(hWnd),wInfo.rcWindow);
 			printf("(%d,%d)\n",rect.left,rect.top);
 		}
 		DeleteString(&str);
-		CloseHandle(hProc);
 	}
+	CloseHandle(hProc);
 	
 	return TRUE;
 }
 void SaveCtrlsCommandFunc(WPARAM wParam,LPARAM lParam){
-	int index=wParam-SAVECTRLS_BT_ORIGIN;
-	int i; 
+	static int index=-1;
+	int i;
+	int itemIndex=0;
+	printf("wParam: %d\n",wParam);
+	switch(LOWORD(wParam)){
+		case SAVECTRLS_LI_ITEMS:
+			printf("list click\n");
+			switch(HIWORD(wParam)){
+				case LBN_SELCHANGE:
+					itemIndex=SendMessage(sc.liItems,LB_GETCURSEL,0,0);
+					ShowItemInfo(index+1,quickslot[index].item[itemIndex],sc.stInfo);
+					break;
+			}
+			break;
+		case SAVECTRLS_BT_SAVE:
+			printf("index:%d\n",index);
+			if(index==-1){
+				printf("didn't select slot\n");
+				break;
+			}
+			if(quickslot[index].itemCount==0){
+				EnumWindows(EnumWindowsProc,(LPARAM)&quickslot[index]);
+				for(i=0;i<quickslot[index].itemCount;i++){
+					printf("max: %d| (%d,%d) |path: %s\n",quickslot[index].item[i].maximized,quickslot[index].item[i].xpos,quickslot[index].item[i].ypos,quickslot[index].item[i].path);
+				}
+				printf("done: %d\n",SaveQuickslot(quickslot,sizeof(quickslot)));
+			}
+			else{
+				printf("no place\n");
+			}
+			ShowItemList(quickslot[index],sc.liItems);
+			break;
+		case SAVECTRLS_BT_MODI:
+			break;
+		case SAVECTRLS_BT_REMOVE:
+			break;
+		default:
+			index=wParam-SAVECTRLS_BT_ORIGIN;
+			printf("index: %d\n",index);
+			ShowItemList(quickslot[index],sc.liItems);
+			ShowItemInfo(index+1,quickslot[index].item[itemIndex],sc.stInfo);
+//			index=wParam-SAVECTRLS_BT_ORIGIN;
+//			printf("index:%d\n",index);
+//			if(quickslot[index].itemCount==0){
+//				EnumWindows(EnumWindowsProc,(LPARAM)&quickslot[index]);
+//				for(i=0;i<quickslot[index].itemCount;i++){
+//					printf("max: %d| (%d,%d) |path: %s\n",quickslot[index].item[i].maximized,quickslot[index].item[i].xpos,quickslot[index].item[i].ypos,quickslot[index].item[i].path);
+//				}
+//				printf("done: %d\n",SaveQuickslot(quickslot,sizeof(quickslot)));
+//			}
+//			else{
+//				printf("no place\n");
+//			}
+			break;
+	}
 	
-	printf("index:%d\n",index);
-	if(quickslot[index].itemCount==0){
-		EnumWindows(EnumWindowsProc,(LPARAM)&quickslot[index]);
-		for(i=0;i<quickslot[index].itemCount;i++){
-			printf("max: %d| (%d,%d) |path: %s\n",quickslot[index].item[i].maximized,quickslot[index].item[i].xpos,quickslot[index].item[i].ypos,quickslot[index].item[i].path);
-		}
-		printf("done: %d\n",SaveQuickslot(quickslot,sizeof(quickslot)));
-	}
-	else{
-		printf("no place\n");
-	}
 }
