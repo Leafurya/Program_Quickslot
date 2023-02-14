@@ -47,13 +47,9 @@ char SaveQuickslot(QuickSlot *pQuickslot,int size){
 	fclose(file);
 	return 1;
 }
-	typedef struct _target{
-		char *path;
-		HWND hWnd;
-	}Target;
 BOOL CALLBACK GetHwndProc(HWND hWnd,LPARAM lParam){
 	//printf("%d\n",hWnd);
-	Target *target=(Target *)lParam;
+	Item *target=(Item *)lParam;
 	BOOL isVisible=IsWindowVisible(hWnd);
 	DWORD exStyle=GetWindowLong(hWnd,GWL_EXSTYLE);
 	BOOL isAppWindow=(exStyle&WS_EX_APPWINDOW);
@@ -91,29 +87,32 @@ BOOL CALLBACK GetHwndProc(HWND hWnd,LPARAM lParam){
 }
 char SpreadQuickslot(QuickSlot slot){
 	int i;
-	Target target;
 	Item item;
 	SHELLEXECUTEINFOA info[ITEM_MAXSIZE]={0,};
 	RECT rect;
+	char cmd[2048]={0};
 	
 	ZeroMemory(info,sizeof(info));
 	if(slot.itemCount!=0){
 		for(i=0;i<slot.itemCount;i++){
 			item=slot.item[i];
-			ShellExecute(NULL,"open",item.path,NULL,NULL,SW_SHOW);
+			ZeroMemory(cmd,sizeof(cmd));
+			sprintf(cmd,"%s %s",item.path,item.parameter);
+			printf("cmd: %s\n",cmd);
+			ShellExecute(NULL,"open",item.path,item.parameter,NULL,SW_SHOW);
 		}
 		Sleep(500);
 		for(i=0;i<slot.itemCount;i++){
 			item=slot.item[i];
-			target.path=item.path;
-			EnumWindows(GetHwndProc,(LPARAM)&target);
-			GetWindowRect(target.hWnd,&rect);
-			MoveWindow(target.hWnd,item.xpos,item.ypos,rect.right-rect.left,rect.bottom-rect.top,TRUE);
-			printf("hWnd:%d\t%s\n",target.hWnd,item.path);
+			EnumWindows(GetHwndProc,(LPARAM)&item);
+			GetWindowRect(item.hWnd,&rect);
+			MoveWindow(item.hWnd,item.xpos,item.ypos,rect.right-rect.left,rect.bottom-rect.top,TRUE);
+			printf("hWnd:%d\t%s\n",item.hWnd,item.path);
 			if(item.maximized){
-				ShowWindow(target.hWnd,SW_SHOWMAXIMIZED);
+				ShowWindow(item.hWnd,SW_SHOWMAXIMIZED);
 			}
-			CloseHandle(target.hWnd);
+			//SetWindowText(item.hWnd,"solt item");
+			//CloseHandle(target.hWnd);
 		}
 		return 0;
 	}

@@ -10,6 +10,7 @@ typedef struct _item{
 	char maximized;
 	int xpos, ypos;
 	int w,h;
+	HWND hWnd;
 }Item, *LPItem;
 
 Item CreateItem(char *,char *,char,RECT);

@@ -4,18 +4,18 @@ Name=Program_Quickslot
 Type=0
 Ver=2
 ObjFiles=
-Includes=D:\GitHub\Program_Quickslot\header
-Libs=D:\GitHub\Program_Quickslot\lib
-PrivateResource=
-ResourceIncludes=
+Includes=.\res;.\header
+Libs=.\lib
+PrivateResource=Program_Quickslot_private.rc
+ResourceIncludes=.\res
 MakeIncludes=
 Compiler=
 CppCompiler=
 Linker=-ldoublebuffer_@@_-lpsapi_@@_-lstrproc2_@@_-lctrlmanager_@@_
 IsCpp=0
 Icon=
-ExeOutput=
-ObjectOutput=
+ExeOutput=..\Program_Quickslot
+ObjectOutput=..\Program_Quickslot
 LogOutput=
 LogOutputEnabled=0
 OverrideOutput=0
@@ -29,7 +29,7 @@ IncludeVersionInfo=0
 SupportXPThemes=0
 CompilerSet=0
 CompilerSettings=0000000000000000000000000
-UnitCount=7
+UnitCount=8
 
 [VersionInfo]
 Major=1
@@ -98,7 +98,7 @@ Compile=1
 Link=1
 Priority=1000
 OverrideBuildCmd=0
-BuildCmd=
+BuildCmd=$(CC) -c quickslot.c -o ../Program_Quickslot/quickslot.o $(CFLAGS)
 
 [Unit6]
 FileName=ctrls.h
@@ -116,6 +116,15 @@ CompileCpp=0
 Folder=
 Compile=1
 Link=1
+Priority=1000
+OverrideBuildCmd=0
+BuildCmd=
+
+[Unit8]
+FileName=res\resource.rc
+Folder=Resources
+Compile=1
+Link=0
 Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
