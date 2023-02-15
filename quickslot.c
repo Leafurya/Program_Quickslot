@@ -61,7 +61,6 @@ BOOL CALLBACK GetHwndProc(HWND hWnd,LPARAM lParam){
 	char path[1024]={0};
 	char tpath[1024]={0};
 	
-	
 	if(!isVisible){
 		return TRUE;
 	}

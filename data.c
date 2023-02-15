@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <strproc2.h>
 
-Item CreateItem(char *path,char *parameter,char maximized,RECT winPos){
+Item CreateItem(char *path,char *parameter,char maximized,RECT winPos,HWND hWnd){
 	Item item;
 	STRING string=Split(path,'\\');
 	
@@ -18,6 +18,7 @@ Item CreateItem(char *path,char *parameter,char maximized,RECT winPos){
 	item.ypos=winPos.top;
 	item.w=winPos.right-winPos.left;
 	item.h=winPos.bottom-winPos.top;
+	item.hWnd=hWnd;
 	
 	DeleteString(&string);
 	

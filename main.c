@@ -202,7 +202,7 @@ BOOL CALLBACK EnumWindowsProc(HWND hWnd,LPARAM lParam){
 		if(!IsFilteredWindow(progName)){
 			GetWindowInfo(hWnd,&wInfo);
 			sprintf(tpath,"\"%s\"",path);
-			printf("tpath: %s\n",tpath);
+			printf("hWnd: %d\ttpath: %s\n",hWnd,tpath);
 			//SendMessage(hWnd,WM_SIZE,SIZE_MINIMIZED,0);
 //			for(i=0;i<lpQuickslot->itemCount;i++){
 //				if(!strcmp(lpQuickslot->item[i].path,tpath)){
@@ -212,8 +212,8 @@ BOOL CALLBACK EnumWindowsProc(HWND hWnd,LPARAM lParam){
 //				}
 //			}
 			GetWindowRect(hWnd,&rect);
-			lpQuickslot->item[lpQuickslot->itemCount++]=CreateItem(path,NULL,IsZoomed(hWnd),wInfo.rcWindow);
-			printf("(%d,%d)\n",rect.left,rect.top);
+			lpQuickslot->item[lpQuickslot->itemCount++]=CreateItem(path,NULL,IsZoomed(hWnd),wInfo.rcWindow,hWnd);
+			//printf("pid:%d\n",pID);
 		}
 		DeleteString(&str);
 	}
@@ -235,6 +235,16 @@ void SaveCtrlsCommandFunc(WPARAM wParam,LPARAM lParam){
 		case SAVECTRLS_LI_ITEMS:
 			printf("list click\n");
 			switch(HIWORD(wParam)){
+				case LBN_DBLCLK:
+					printf("dblcick\n");
+					itemIndex=SendMessage(sc.liItems,LB_GETCURSEL,0,0);
+					printf("quickslot[nowSlotIndex].item[itemIndex].hWnd: %d\n",quickslot[nowSlotIndex].item[itemIndex].hWnd);
+					if(!SetForegroundWindow(quickslot[nowSlotIndex].item[itemIndex].hWnd)){
+					//if(SetFocus(mainWnd)==NULL){
+						printf("%d\n",GetLastError());
+						MessageBox(mainWnd,"창을 찾을 수 없습니다.","알림",MB_OK);
+					}
+					break;
 				case LBN_SELCHANGE:
 					itemIndex=SendMessage(sc.liItems,LB_GETCURSEL,0,0);
 					ShowAboutItemFunc(itemIndex,0);
