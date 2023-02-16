@@ -15,8 +15,9 @@ typedef struct _quickslot{
 char LoadQuickslot(QuickSlot (*)[],int);
 char SaveQuickslot(QuickSlot *,int);
 int GetSlotIndex();
-char SpreadQuickslot(QuickSlot);
+char SpreadQuickslot(QuickSlot *,int);
 void ShowItemList(QuickSlot,HWND);
 void ShowItemInfo(int,Item,HWND);
+void ShowSlotData(QuickSlot *);
 
 #endif

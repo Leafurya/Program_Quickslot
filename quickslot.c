@@ -4,6 +4,17 @@
 #include <shellapi.h>
 #include <psapi.h>
 
+QuickSlot *originSlotAdr;
+
+void ShowSlotData(QuickSlot *slot){
+	int i,j;
+	printf("ShowSlotData==========\n");
+	for(i=0;i<KEYCOUNT;i++){
+		for(j=0;j<slot[i].itemCount;j++){
+			printf("maxi:%d\thWnd:%d\tparam: %s|path:%s\n",slot[i].item[j].maximized,slot[i].item[j].hWnd,slot[i].item[j].parameter,slot[i].item[j].path);
+		}
+	}
+}
 int GetSlotIndex(int key){
 	int i;
 	static char toggle=1;
@@ -47,6 +58,19 @@ char SaveQuickslot(QuickSlot *pQuickslot,int size){
 	fclose(file);
 	return 1;
 }
+	char IsNotHWNDInSlot(HWND hWnd){
+		int i,j;
+		for(i=0;i<KEYCOUNT;i++){
+			if(originSlotAdr[i].itemCount!=0){
+				for(j=0;j<originSlotAdr[i].itemCount;j++){
+					if(originSlotAdr[i].item[j].hWnd==hWnd){
+						return 0;
+					}
+				}
+			}
+		}
+		return 1;
+	}
 BOOL CALLBACK GetHwndProc(HWND hWnd,LPARAM lParam){
 	//printf("%d\n",hWnd);
 	Item *target=(Item *)lParam;
@@ -60,6 +84,7 @@ BOOL CALLBACK GetHwndProc(HWND hWnd,LPARAM lParam){
 	HANDLE hProc;
 	char path[1024]={0};
 	char tpath[1024]={0};
+	int i;
 	
 	if(!isVisible){
 		return TRUE;
@@ -74,41 +99,46 @@ BOOL CALLBACK GetHwndProc(HWND hWnd,LPARAM lParam){
 		sprintf(path,"\"%s\"\0",tpath);
 		//printf("%s\n%s\n\n",path,target->path);
 		if(!strcmp(path,target->path)){
-			printf("hWnd:%d\n",hWnd);
-			target->hWnd=hWnd;
-			CloseHandle(hProc);
-			return FALSE;
+			if(IsNotHWNDInSlot(hWnd)){
+				printf("hWnd:%d\n",hWnd);
+				target->hWnd=hWnd;
+				CloseHandle(hProc);
+				return FALSE;
+			}
 		}
 		ZeroMemory(path,sizeof(path));
 	}
 	CloseHandle(hProc);
 	return TRUE;
 }
-char SpreadQuickslot(QuickSlot slot){
+char SpreadQuickslot(QuickSlot *pOriginSlot,int slotIndex){
 	int i;
-	Item item;
 	SHELLEXECUTEINFOA info[ITEM_MAXSIZE]={0,};
 	RECT rect;
 	char cmd[2048]={0};
+	QuickSlot slot=pOriginSlot[slotIndex];
+	Item *items=pOriginSlot[slotIndex].item;
+	
+	originSlotAdr=pOriginSlot;
 	
 	ZeroMemory(info,sizeof(info));
 	if(slot.itemCount!=0){
 		for(i=0;i<slot.itemCount;i++){
-			item=slot.item[i];
+			//item=items[i];
 			ZeroMemory(cmd,sizeof(cmd));
-			sprintf(cmd,"%s %s",item.path,item.parameter);
+			sprintf(cmd,"%s %s",items[i].path,items[i].parameter);
 			printf("cmd: %s\n",cmd);
-			ShellExecute(NULL,"open",item.path,item.parameter,NULL,SW_SHOW);
+			ShellExecute(NULL,"open",items[i].path,items[i].parameter,NULL,SW_SHOW);
 		}
 		Sleep(500);
 		for(i=0;i<slot.itemCount;i++){
-			item=slot.item[i];
-			EnumWindows(GetHwndProc,(LPARAM)&item);
-			GetWindowRect(item.hWnd,&rect);
-			MoveWindow(item.hWnd,item.xpos,item.ypos,rect.right-rect.left,rect.bottom-rect.top,TRUE);
-			printf("hWnd:%d\t%s\n",item.hWnd,item.path);
-			if(item.maximized){
-				ShowWindow(item.hWnd,SW_SHOWMAXIMIZED);
+			//item=items[i];
+			EnumWindows(GetHwndProc,(LPARAM)&items[i]);
+			GetWindowRect(items[i].hWnd,&rect);
+			MoveWindow(items[i].hWnd,items[i].xpos,items[i].ypos,rect.right-rect.left,rect.bottom-rect.top,TRUE);
+			printf("hWnd:%d\t%s\n",items[i].hWnd,items[i].path);
+			if(items[i].maximized){
+				ShowWindow(items[i].hWnd,SW_SHOWMAXIMIZED);
 			}
 			//SetWindowText(item.hWnd,"solt item");
 			//CloseHandle(target.hWnd);

@@ -46,3 +46,7 @@ void TrayCommandFunc(HWND hWnd,LPARAM lParam){
 			break;
 	}
 }
+void ChangeTrayTitle(char *title){
+	strcpy(trayicon.szTip,title);
+	Shell_NotifyIcon(NIM_MODIFY,&trayicon);
+}

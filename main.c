@@ -13,12 +13,14 @@
 #include "trayicon.h"
 
 #define TIMER_INPUT	0
+#define WM_FINDWINDOW	WM_USER+4
 
 LRESULT CALLBACK MainWndProc(HWND,UINT,WPARAM,LPARAM);
 BOOL CALLBACK EnumWindowsProc(HWND,LPARAM);
 BOOL CALLBACK ModiDlgProc(HWND,UINT,WPARAM,LPARAM);
 
 void SaveCtrlsCommandFunc(WPARAM,LPARAM);
+void ShowSaveButton(char);
 
 HWND mainWnd;
 RECT mainRect;
@@ -90,7 +92,8 @@ LRESULT CALLBACK MainWndProc(HWND hWnd,UINT iMessage,WPARAM wParam,LPARAM lParam
 	char trayMessage[32]={0};
 	switch(iMessage) {
 		case WM_CREATE:
-			
+			printf("SAVECTRLS_BT_SAVE:%d\n",SAVECTRLS_BT_SAVE);
+			printf("SAVECTRLS_BT_FIND:%d\n",SAVECTRLS_BT_FIND);
 			CreateCtrlFont();
 			InitCtrlManager(&cm,&mainRect);
 			CreateSaveCtrls(&sc,hWnd,g_hInst);
@@ -115,7 +118,7 @@ LRESULT CALLBACK MainWndProc(HWND hWnd,UINT iMessage,WPARAM wParam,LPARAM lParam
 			ShowItemInfo(1,quickslot[nowSlotIndex].item[0],sc.stInfo);
 			
 			CreateTrayIcon(hWnd,programIcon,trayName);
-			
+			ShowSaveButton(0);
 			SendMessage(hWnd,WM_SIZE,0,0);
 			return 0;
 		case WM_SIZE:
@@ -141,12 +144,15 @@ LRESULT CALLBACK MainWndProc(HWND hWnd,UINT iMessage,WPARAM wParam,LPARAM lParam
 			switch(wParam){
 				case TIMER_INPUT:
 					if((index=GetSlotIndex())!=-1){
-						if(SpreadQuickslot(quickslot[index])){
+						if(SpreadQuickslot(quickslot,index)){
 							printf("empty slot\n");
 							break;
 						}
 						sprintf(trayMessage,"F%d 슬롯을 열었습니다.",index+1);
 						CreateNotification(hWnd,trayName,trayMessage);
+						sprintf(trayMessage,"F%d슬롯",nowSlotIndex+1);
+						ChangeTrayTitle(trayMessage);
+						ShowSlotData(quickslot);
 					}
 					break;
 			}
@@ -252,6 +258,10 @@ BOOL CALLBACK EnumWindowsProc(HWND hWnd,LPARAM lParam){
 			ShowItemList(quickslot[nowSlotIndex],sc.liItems);
 		ShowItemInfo(nowSlotIndex+1,quickslot[nowSlotIndex].item[itemIndex],sc.stInfo);
 	}
+void ShowSaveButton(char val){
+	ShowWindow(sc.btFind,val?SW_HIDE:SW_SHOW);
+	ShowWindow(sc.btSave,val?SW_SHOW:SW_HIDE);
+}
 void SaveCtrlsCommandFunc(WPARAM wParam,LPARAM lParam){
 	int i;
 	//int itemIndex=0;
@@ -279,6 +289,10 @@ void SaveCtrlsCommandFunc(WPARAM wParam,LPARAM lParam){
 			}
 			break;
 		case SAVECTRLS_BT_SAVE:
+			printf("done: %d\n",SaveQuickslot(quickslot,sizeof(quickslot)));
+			ShowSaveButton(0);
+			break;
+		case SAVECTRLS_BT_FIND:
 			itemIndex=0;
 			printf("index:%d\n",nowSlotIndex);
 			if(quickslot[nowSlotIndex].itemCount!=0){
@@ -290,11 +304,13 @@ void SaveCtrlsCommandFunc(WPARAM wParam,LPARAM lParam){
 			}
 			ZeroMemory(&quickslot[nowSlotIndex],sizeof(QuickSlot));
 			EnumWindows(EnumWindowsProc,(LPARAM)&quickslot[nowSlotIndex]);
-			for(i=0;i<quickslot[nowSlotIndex].itemCount;i++){
-				printf("max: %d| (%d,%d) |path: %s\n",quickslot[nowSlotIndex].item[i].maximized,quickslot[nowSlotIndex].item[i].xpos,quickslot[nowSlotIndex].item[i].ypos,quickslot[nowSlotIndex].item[i].path);
-			}
-			printf("done: %d\n",SaveQuickslot(quickslot,sizeof(quickslot)));
 			ShowAboutItemFunc(itemIndex,1);
+//			for(i=0;i<quickslot[nowSlotIndex].itemCount;i++){
+//				printf("max: %d| (%d,%d) |path: %s\n",quickslot[nowSlotIndex].item[i].maximized,quickslot[nowSlotIndex].item[i].xpos,quickslot[nowSlotIndex].item[i].ypos,quickslot[nowSlotIndex].item[i].path);
+//			}
+			MessageBox(mainWnd,"슬롯에 저장할 프로그램을 감지했습니다\n매개변수를 설정하여 정교한 작업을 시작하세요.\n모든 설정이 끝난 후 저장버튼을 클릭해주세요.","알림",MB_OK);
+			ShowAboutItemFunc(itemIndex,1);
+			ShowSaveButton(1);
 			break;
 		case SAVECTRLS_BT_MODI:
 			itemIndex=SendMessage(sc.liItems,LB_GETCURSEL,0,0);
@@ -308,12 +324,14 @@ void SaveCtrlsCommandFunc(WPARAM wParam,LPARAM lParam){
 				SaveQuickslot(quickslot,sizeof(quickslot));
 			}
 			ShowAboutItemFunc(itemIndex,1);
+			ShowSaveButton(0);
 			break;
 		default:
 			itemIndex=0;
 			nowSlotIndex=wParam-SAVECTRLS_BT_ORIGIN;
 			printf("index: %d\n",nowSlotIndex);
 			ShowAboutItemFunc(itemIndex,1);
+			ShowSaveButton(0);
 			break;
 	}
 }

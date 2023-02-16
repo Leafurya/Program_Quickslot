@@ -12,5 +12,6 @@ void CreateTrayIcon(HWND,HICON,char *);
 void CreateNotification(HWND,char *,char *);
 void DeleteTrayIcon();
 void TrayCommandFunc(HWND,LPARAM);
+void ChangeTrayTitle(char *);
 
 #endif

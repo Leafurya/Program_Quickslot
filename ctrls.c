@@ -1,7 +1,7 @@
 #include "ctrls.h"
 
-int fontSize=12;
-char *fontName=(char *)"±¼¸²";
+int fontSize=15;
+char *fontName=(char *)"¸¼Àº °íµñ";
 HFONT font;
 char *keys[FKEYCOUNT]={"F1","F2","F3","F4","F5","F6","F7","F8","F9","F10","F11","F12"};
 
@@ -38,6 +38,7 @@ void CreateSaveCtrls(void *ctrls,HWND hWnd,HINSTANCE hInst){
 	
 	c->liItems=CreateWindow("listbox",NULL,LBS_NOTIFY|WS_CHILD|WS_BORDER,0,0,0,0,hWnd,(HMENU)SAVECTRLS_LI_ITEMS,hInst,NULL);
 	c->btSave=CreateWindow("button","ÀúÀå",WS_CHILD|WS_BORDER,0,0,0,0,hWnd,(HMENU)SAVECTRLS_BT_SAVE,hInst,NULL);
+	c->btFind=CreateWindow("button","½ºÄµ",WS_CHILD|WS_BORDER,0,0,0,0,hWnd,(HMENU)SAVECTRLS_BT_FIND,hInst,NULL);
 	c->btModi=CreateWindow("button","¼öÁ¤",WS_CHILD|WS_BORDER,0,0,0,0,hWnd,(HMENU)SAVECTRLS_BT_MODI,hInst,NULL);
 	c->btRemove=CreateWindow("button","»èÁ¦",WS_CHILD|WS_BORDER,0,0,0,0,hWnd,(HMENU)SAVECTRLS_BT_REMOVE,hInst,NULL);
 	
@@ -66,6 +67,7 @@ void MoveSaveCtrls(void *ctrls,RECT rect){
 	
 	x=0;
 	MoveWindow(c->btSave,x,underBtY,underBtW,underBtH,TRUE);
+	MoveWindow(c->btFind,x,underBtY,underBtW,underBtH,TRUE);
 	x+=underBtW;
 	MoveWindow(c->btModi,x,underBtY,underBtW,underBtH,TRUE);
 	x+=underBtW;
