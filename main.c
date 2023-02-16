@@ -99,6 +99,7 @@ LRESULT CALLBACK MainWndProc(HWND hWnd,UINT iMessage,WPARAM wParam,LPARAM lParam
 			for(index=0;index<KEYCOUNT;index++){
 				printf("index:%d===========\n",index);
 				for(i=0;i<quickslot[index].itemCount;i++){
+					quickslot[index].item[i].hWnd=0;
 					printf("max: %d| (%d,%d)%s\t |path: %s\n",quickslot[index].item[i].maximized,quickslot[index].item[i].xpos,quickslot[index].item[i].ypos,quickslot[index].item[i].name,quickslot[index].item[i].path);
 				}
 			}
