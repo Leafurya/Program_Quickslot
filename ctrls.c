@@ -19,11 +19,23 @@ void CreateCtrlFont(){
 		}
 	}
 void CreateSaveCtrls(void *ctrls,HWND hWnd,HINSTANCE hInst){
-	int i;
+	int i=0;
 	SaveCtrls *c=(SaveCtrls *)ctrls;
-	for(i=0;i<FKEYCOUNT;i++){
-		c->btSlot[i]=CreateWindow("button",keys[i],WS_CHILD|WS_BORDER,0,0,0,0,hWnd,(HMENU)(SAVECTRLS_BT_ORIGIN+i),hInst,NULL);
-	}
+	HMENU btSlotID;
+	
+	c->btSlot[i]=CreateWindow("button",keys[i],WS_CHILD|WS_BORDER,0,0,0,0,hWnd,(HMENU)SAVECTRLS_BT_F1,hInst,NULL);i++;
+	c->btSlot[i]=CreateWindow("button",keys[i],WS_CHILD|WS_BORDER,0,0,0,0,hWnd,(HMENU)SAVECTRLS_BT_F2,hInst,NULL);i++;
+	c->btSlot[i]=CreateWindow("button",keys[i],WS_CHILD|WS_BORDER,0,0,0,0,hWnd,(HMENU)SAVECTRLS_BT_F3,hInst,NULL);i++;
+	c->btSlot[i]=CreateWindow("button",keys[i],WS_CHILD|WS_BORDER,0,0,0,0,hWnd,(HMENU)SAVECTRLS_BT_F4,hInst,NULL);i++;
+	c->btSlot[i]=CreateWindow("button",keys[i],WS_CHILD|WS_BORDER,0,0,0,0,hWnd,(HMENU)SAVECTRLS_BT_F5,hInst,NULL);i++;
+	c->btSlot[i]=CreateWindow("button",keys[i],WS_CHILD|WS_BORDER,0,0,0,0,hWnd,(HMENU)SAVECTRLS_BT_F6,hInst,NULL);i++;
+	c->btSlot[i]=CreateWindow("button",keys[i],WS_CHILD|WS_BORDER,0,0,0,0,hWnd,(HMENU)SAVECTRLS_BT_F7,hInst,NULL);i++;
+	c->btSlot[i]=CreateWindow("button",keys[i],WS_CHILD|WS_BORDER,0,0,0,0,hWnd,(HMENU)SAVECTRLS_BT_F8,hInst,NULL);i++;
+	c->btSlot[i]=CreateWindow("button",keys[i],WS_CHILD|WS_BORDER,0,0,0,0,hWnd,(HMENU)SAVECTRLS_BT_F9,hInst,NULL);i++;
+	c->btSlot[i]=CreateWindow("button",keys[i],WS_CHILD|WS_BORDER,0,0,0,0,hWnd,(HMENU)SAVECTRLS_BT_F10,hInst,NULL);i++;
+	c->btSlot[i]=CreateWindow("button",keys[i],WS_CHILD|WS_BORDER,0,0,0,0,hWnd,(HMENU)SAVECTRLS_BT_F11,hInst,NULL);i++;
+	c->btSlot[i]=CreateWindow("button",keys[i],WS_CHILD|WS_BORDER,0,0,0,0,hWnd,(HMENU)SAVECTRLS_BT_F12,hInst,NULL);
+	
 	c->liItems=CreateWindow("listbox",NULL,LBS_NOTIFY|WS_CHILD|WS_BORDER,0,0,0,0,hWnd,(HMENU)SAVECTRLS_LI_ITEMS,hInst,NULL);
 	c->btSave=CreateWindow("button","저장",WS_CHILD|WS_BORDER,0,0,0,0,hWnd,(HMENU)SAVECTRLS_BT_SAVE,hInst,NULL);
 	c->btModi=CreateWindow("button","수정",WS_CHILD|WS_BORDER,0,0,0,0,hWnd,(HMENU)SAVECTRLS_BT_MODI,hInst,NULL);

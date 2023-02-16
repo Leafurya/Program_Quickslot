@@ -10,6 +10,7 @@
 #include "quickslot.h"
 #include "ctrls.h"
 #include "resource.h"
+#include "trayicon.h"
 
 #define TIMER_INPUT	0
 
@@ -28,9 +29,11 @@ CtrlManager cm;
 SaveCtrls sc;
 
 QuickSlot quickslot[KEYCOUNT];
+HICON programIcon;
 
 int nowSlotIndex=0;
 int itemIndex=0;
+char *trayName="Äü½½·Ô";
 
 int APIENTRY WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance
 		  ,LPSTR lpszCmdParam,int nCmdShow)
@@ -40,11 +43,13 @@ int APIENTRY WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance
 	WNDCLASS WndClass;
 	g_hInst=hInstance;
 	
+	programIcon=LoadIcon(g_hInst,MAKEINTRESOURCE(IDI_PROGRAMICON64));
+	
 	WndClass.cbClsExtra=0;
 	WndClass.cbWndExtra=0;
 	WndClass.hbrBackground=(HBRUSH)GetStockObject(WHITE_BRUSH);
 	WndClass.hCursor=LoadCursor(NULL,IDC_ARROW);
-	WndClass.hIcon=LoadIcon(NULL,IDI_APPLICATION);
+	WndClass.hIcon=programIcon;
 	WndClass.hInstance=hInstance;
 	WndClass.lpfnWndProc=(WNDPROC)MainWndProc;
 	WndClass.lpszClassName=mainWndClass;
@@ -82,9 +87,9 @@ LRESULT CALLBACK MainWndProc(HWND hWnd,UINT iMessage,WPARAM wParam,LPARAM lParam
 	int i,index;
 	POINT pos;
 	HWND wnd;
+	char trayMessage[32]={0};
 	switch(iMessage) {
 		case WM_CREATE:
-			
 			
 			CreateCtrlFont();
 			InitCtrlManager(&cm,&mainRect);
@@ -109,6 +114,8 @@ LRESULT CALLBACK MainWndProc(HWND hWnd,UINT iMessage,WPARAM wParam,LPARAM lParam
 			ShowItemList(quickslot[nowSlotIndex],sc.liItems);
 			ShowItemInfo(1,quickslot[nowSlotIndex].item[0],sc.stInfo);
 			
+			CreateTrayIcon(hWnd,programIcon,trayName);
+			
 			SendMessage(hWnd,WM_SIZE,0,0);
 			return 0;
 		case WM_SIZE:
@@ -125,8 +132,6 @@ LRESULT CALLBACK MainWndProc(HWND hWnd,UINT iMessage,WPARAM wParam,LPARAM lParam
 		case WM_KEYDOWN:
 			switch(wParam){
 				case VK_RETURN:
-					wnd=FindWindow(NULL,"solt item");
-					printf("wnd: %d\n",wnd);
 					//MoveWindow(wnd,0,0,1000,1000,TRUE);
 					printf("================================\n");
 					break;
@@ -138,19 +143,39 @@ LRESULT CALLBACK MainWndProc(HWND hWnd,UINT iMessage,WPARAM wParam,LPARAM lParam
 					if((index=GetSlotIndex())!=-1){
 						if(SpreadQuickslot(quickslot[index])){
 							printf("empty slot\n");
+							break;
 						}
+						sprintf(trayMessage,"F%d ½½·ÔÀ» ¿­¾ú½À´Ï´Ù.",index+1);
+						CreateNotification(hWnd,trayName,trayMessage);
 					}
 					break;
 			}
+			return 0;
+		case WM_TRAY_MSG:
+			TrayCommandFunc(hWnd,lParam);
 			return 0;
 		case WM_COMMAND:
 			switch((int)(LOWORD(wParam)/100)){
 				case ID_SAVECTRLS:
 					SaveCtrlsCommandFunc(wParam,lParam);
 					break;
+				default:
+					switch(wParam){
+						case WM_EXIT_PROGRAM:
+							DestroyWindow(hWnd);
+							break;
+						case WM_OPEN_PROGRAM:
+							ShowWindow(hWnd,SW_SHOW);
+							break;
+					}
+					break;
 			}
 			return 0;
+		case WM_CLOSE:
+			ShowWindow(hWnd,SW_HIDE);
+			return 0;
 		case WM_DESTROY:
+			DeleteTrayIcon();
 			DestroyCtrlManager(&cm);
 			PostQuitMessage(0);
 			return 0;

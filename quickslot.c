@@ -20,7 +20,7 @@ int GetSlotIndex(int key){
 	}
 	return -1; //didn't find
 }
-char LoadQuickslot(QuickSlot *pQuickslot[KEYCOUNT],int size){
+char LoadQuickslot(QuickSlot (*pQuickslot)[KEYCOUNT],int size){
 	FILE *file=fopen("data/slot","rb");
 	
 	if(file==NULL){

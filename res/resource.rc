@@ -27,3 +27,6 @@ FONT 8, "Ms Shell Dlg"
     EDITTEXT        ID_ED_PARAM, 22, 58, 335, 13, ES_AUTOHSCROLL, WS_EX_LEFT
     DEFPUSHBUTTON   "Á¦°Å", ID_BT_REMOVE, 192, 84, 50, 14, 0, WS_EX_LEFT
 }
+
+IDI_PROGRAMICON    ICON           "res/programIcon.ico"
+IDI_PROGRAMICON64    ICON           "res/programIcon64x64.ico"

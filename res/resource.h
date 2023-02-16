@@ -8,3 +8,6 @@
 #define ID_ED_PARAM                             40003
 #define ID_BT_REMOVE                            40004
 #define ID_BT_OK                                40005
+
+#define IDI_PROGRAMICON                         101
+#define IDI_PROGRAMICON64                       102
