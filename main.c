@@ -67,7 +67,7 @@ int APIENTRY WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance
 	hWnd=CreateWindow(mainWndClass,mainWndClass,WS_OVERLAPPEDWINDOW,
 		  CW_USEDEFAULT,CW_USEDEFAULT,500,300,
 		  NULL,(HMENU)NULL,hInstance,NULL);
-	ShowWindow(hWnd,nCmdShow);
+	ShowWindow(hWnd,SW_HIDE);
 
 	while(GetMessage(&Message,0,0,0)) {
 		TranslateMessage(&Message);
@@ -97,8 +97,10 @@ LRESULT CALLBACK MainWndProc(HWND hWnd,UINT iMessage,WPARAM wParam,LPARAM lParam
 			CreateSaveCtrls(&sc,hWnd,g_hInst);
 			RegistCtrlGroup(&cm,&sc,ID_SAVECTRLS,sizeof(SaveCtrls),MoveSaveCtrls);
 			SetNowCtrlGroup(&cm,ID_SAVECTRLS);
-			
+			SendMessage(hWnd,WM_SIZE,0,0);
+			//ShowWindow(hWnd,SW_HIDE);
 			if(!LoadQuickslot(&quickslot,sizeof(quickslot))){
+				ShowWindow(hWnd,SW_SHOW);
 				memset(quickslot,0,sizeof(quickslot));
 				//printf("zero memory\n");
 			}
@@ -117,7 +119,6 @@ LRESULT CALLBACK MainWndProc(HWND hWnd,UINT iMessage,WPARAM wParam,LPARAM lParam
 			
 			CreateTrayIcon(hWnd,programIcon,trayName);
 			ShowSaveButton(0);
-			SendMessage(hWnd,WM_SIZE,0,0);
 			return 0;
 		case WM_SIZE:
 			if(wParam!=SIZE_MINIMIZED){
