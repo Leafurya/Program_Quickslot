@@ -291,6 +291,8 @@ void SaveCtrlsCommandFunc(WPARAM wParam,LPARAM lParam){
 		case SAVECTRLS_BT_SAVE:
 			printf("done: %d\n",SaveQuickslot(quickslot,sizeof(quickslot)));
 			ShowSaveButton(0);
+			sprintf(msgString,"F%d슬롯을 저장했습니다.",nowSlotIndex+1);
+			MessageBox(mainWnd,msgString,"알림",MB_OK);
 			break;
 		case SAVECTRLS_BT_FIND:
 			itemIndex=0;
