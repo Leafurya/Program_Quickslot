@@ -100,7 +100,7 @@ BOOL CALLBACK GetHwndProc(HWND hWnd,LPARAM lParam){
 		//printf("%s\n%s\n\n",path,target->path);
 		if(!strcmp(path,target->path)){
 			if(IsNotHWNDInSlot(hWnd)){
-				printf("hWnd:%d\n",hWnd);
+				//printf("hWnd:%d\n",hWnd);
 				target->hWnd=hWnd;
 				CloseHandle(hProc);
 				return FALSE;
@@ -127,7 +127,7 @@ char SpreadQuickslot(QuickSlot *pOriginSlot,int slotIndex){
 			//item=items[i];
 			ZeroMemory(cmd,sizeof(cmd));
 			sprintf(cmd,"%s %s",items[i].path,items[i].parameter);
-			printf("cmd: %s\n",cmd);
+			//printf("cmd: %s\n",cmd);
 			ShellExecute(NULL,"open",items[i].path,items[i].parameter,NULL,SW_SHOW);
 		}
 		Sleep(500);
@@ -136,7 +136,7 @@ char SpreadQuickslot(QuickSlot *pOriginSlot,int slotIndex){
 			EnumWindows(GetHwndProc,(LPARAM)&items[i]);
 			GetWindowRect(items[i].hWnd,&rect);
 			MoveWindow(items[i].hWnd,items[i].xpos,items[i].ypos,rect.right-rect.left,rect.bottom-rect.top,TRUE);
-			printf("hWnd:%d\t%s\n",items[i].hWnd,items[i].path);
+			//printf("hWnd:%d\t%s\n",items[i].hWnd,items[i].path);
 			if(items[i].maximized){
 				ShowWindow(items[i].hWnd,SW_SHOWMAXIMIZED);
 			}
@@ -152,9 +152,10 @@ void ShowItemList(QuickSlot slot,HWND list){
 	int listCount=SendMessage(list,LB_GETCOUNT,0,0);
 	
 	for(i=listCount;i>=0;i--){
-		if(SendMessage(list,LB_DELETESTRING,i,0)==-1){
-			printf("%s\n",strerror(errno));
-		}
+		SendMessage(list,LB_DELETESTRING,i,0);
+//		if(SendMessage(list,LB_DELETESTRING,i,0)==-1){
+//			//printf("%s\n",strerror(errno));
+//		}
 	}
 	for(i=0;i<slot.itemCount;i++){
 		SendMessage(list,LB_ADDSTRING,0,(LPARAM)slot.item[i].name);
