@@ -165,8 +165,9 @@ void ShowItemList(QuickSlot slot,HWND list){
 		SendMessage(list,LB_ADDSTRING,0,(LPARAM)"EMPTY");
 	}
 }
-void ShowItemInfo(int index,Item item,HWND stText){
+void ShowItemInfo(char *name,Item item,HWND stText){
 	char info[2048]={0,};
-	sprintf(info,"F%d 슬롯\n\n경로:%s\n\n매개변수:%s",index,item.path,item.parameter?item.parameter:"non");
+	
+	sprintf(info,"%s\n\n경로:%s\n\n매개변수:%s",strlen(name)?name:"-",item.path,item.parameter?item.parameter:"non");
 	SetWindowText(stText,info);
 }
