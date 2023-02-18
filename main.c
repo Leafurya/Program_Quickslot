@@ -290,8 +290,9 @@ void SaveCtrlsCommandFunc(WPARAM wParam,LPARAM lParam){
 			SaveQuickslot(quickslot,sizeof(quickslot));
 			//printf("done: %d\n",SaveQuickslot(quickslot,sizeof(quickslot)));
 			ShowSaveButton(0);
-			sprintf(msgString,"F%d슬롯을 저장했습니다.",nowSlotIndex+1);
-			MessageBox(mainWnd,msgString,"알림",MB_OK);
+			DialogBox(g_hInst,MAKEINTRESOURCE(IDD_DIALOG2),mainWnd,(DLGPROC)ModiDlgProc);
+//			sprintf(msgString,"F%d슬롯을 저장했습니다.",nowSlotIndex+1);
+//			MessageBox(mainWnd,msgString,"알림",MB_OK);
 			break;
 		case SAVECTRLS_BT_FIND:
 			itemIndex=0;

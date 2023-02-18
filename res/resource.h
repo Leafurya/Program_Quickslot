@@ -9,5 +9,10 @@
 #define ID_BT_REMOVE                            40004
 #define ID_BT_OK                                40005
 
+#define IDD_DIALOG2                             200
+#define DLG2_BT_OK                              50000
+#define DLG2_BT_CANCLE                          50001
+#define ID_ED_NAME                              50002
+
 #define IDI_PROGRAMICON                         101
 #define IDI_PROGRAMICON64                       102
