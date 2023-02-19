@@ -120,6 +120,7 @@ LRESULT CALLBACK MainWndProc(HWND hWnd,UINT iMessage,WPARAM wParam,LPARAM lParam
 			ShowItemInfo(quickslot[nowSlotIndex].slotName,quickslot[nowSlotIndex].item[0],sc.stInfo);
 			
 			CreateTrayIcon(hWnd,programIcon,trayName);
+			ShowSlotData(quickslot);
 			ShowSaveButton(0);
 			return 0;
 		case WM_SIZE:
@@ -147,11 +148,19 @@ LRESULT CALLBACK MainWndProc(HWND hWnd,UINT iMessage,WPARAM wParam,LPARAM lParam
 			switch(wParam){
 				case TIMER_INPUT:
 					if((index=GetSlotIndex())!=-1){
+						printf("if((index=GetSlotIndex())!=-1):%p\n",quickslot[index].item);
 						if(SpreadQuickslot(quickslot,index)){
 							printf("empty slot\n");
 							break;
 						}
 						sprintf(trayMessage,"\"%s\" 슬롯을 열었습니다.",quickslot[index].slotName);
+						for(index=0;index<KEYCOUNT;index++){
+							printf("index:%d===========\n",index);
+							for(i=0;i<quickslot[index].itemCount;i++){
+								//quickslot[index].item[i].hWnd=0;
+								printf("max: %d| (%d,%d)%s\t |path: %s\n",quickslot[index].item[i].maximized,quickslot[index].item[i].xpos,quickslot[index].item[i].ypos,quickslot[index].item[i].name,quickslot[index].item[i].path);
+							}
+						}
 						CreateNotification(hWnd,trayName,trayMessage);
 						//sprintf(trayMessage,"F%d슬롯",nowSlotIndex+1);
 						ChangeTrayTitle(quickslot[index].slotName);
@@ -277,7 +286,7 @@ void SaveCtrlsCommandFunc(WPARAM wParam,LPARAM lParam){
 				case LBN_DBLCLK:
 					//printf("dblcick\n");
 					itemIndex=SendMessage(sc.liItems,LB_GETCURSEL,0,0);
-					//printf("quickslot[nowSlotIndex].item[itemIndex].hWnd: %d\n",quickslot[nowSlotIndex].item[itemIndex].hWnd);
+					printf("%d,%d,quickslot[nowSlotIndex].item[itemIndex].hWnd: %d\n",nowSlotIndex,itemIndex,quickslot[nowSlotIndex].item[itemIndex].hWnd);
 					if(!SetForegroundWindow(quickslot[nowSlotIndex].item[itemIndex].hWnd)){
 						printf("%d\n",GetLastError());
 						MessageBox(mainWnd,"창을 찾을 수 없습니다.","알림",MB_OK);
@@ -300,6 +309,7 @@ void SaveCtrlsCommandFunc(WPARAM wParam,LPARAM lParam){
 				break;
 			}
 			SaveQuickslot(quickslot,sizeof(quickslot));
+			printf("quickslot[nowSlotIndex].slotName: %s|\n",quickslot[nowSlotIndex].slotName); 
 			ShowItemInfo(quickslot[nowSlotIndex].slotName,quickslot[nowSlotIndex].item[0],sc.stInfo);
 			//ShowItemInfo(quickslot)
 			ShowSaveButton(0);
@@ -310,15 +320,14 @@ void SaveCtrlsCommandFunc(WPARAM wParam,LPARAM lParam){
 			itemIndex=0;
 			//printf("index:%d\n",nowSlotIndex);
 			if(quickslot[nowSlotIndex].itemCount!=0){
-				sprintf(msgString,"F%d슬롯을 교체하겠습니까?",nowSlotIndex+1);
-				if(MessageBox(mainWnd,msgString,"알림",MB_YESNO)==IDNO){
+				if(MessageBox(mainWnd,"슬롯을 교체하겠습니까?","알림",MB_YESNO)==IDNO){
 					reList=0;
 					break;
 				}
 			}
 			ZeroMemory(&quickslot[nowSlotIndex],sizeof(QuickSlot));
 			EnumWindows(EnumWindowsProc,(LPARAM)&quickslot[nowSlotIndex]);
-			ShowAboutItemFunc(itemIndex,1);
+			//ShowAboutItemFunc(itemIndex,1);
 //			for(i=0;i<quickslot[nowSlotIndex].itemCount;i++){
 //				printf("max: %d| (%d,%d) |path: %s\n",quickslot[nowSlotIndex].item[i].maximized,quickslot[nowSlotIndex].item[i].xpos,quickslot[nowSlotIndex].item[i].ypos,quickslot[nowSlotIndex].item[i].path);
 //			}
@@ -341,8 +350,7 @@ void SaveCtrlsCommandFunc(WPARAM wParam,LPARAM lParam){
 			ShowAboutItemFunc(itemIndex,1);
 			break;
 		case SAVECTRLS_BT_REMOVE:
-			sprintf(msgString,"F%d슬롯을 삭제하겠습니까?",nowSlotIndex+1);
-			if(MessageBox(mainWnd,msgString,"알림",MB_YESNO)==IDYES){
+			if(MessageBox(mainWnd,"슬롯을 삭제하겠습니까?","알림",MB_YESNO)==IDYES){
 				ZeroMemory(&quickslot[nowSlotIndex],sizeof(QuickSlot));
 				SaveQuickslot(quickslot,sizeof(quickslot));
 			}
@@ -408,7 +416,7 @@ BOOL CALLBACK NameDlgProc(HWND hDlg,UINT iMessage,WPARAM wParam,LPARAM lParam){
 					EndDialog(hDlg,wParam);
 					return TRUE;
 				case DLG2_BT_OK:
-					GetDlgItemText(hDlg,ID_ED_NAME,quickslot[nowSlotIndex].slotName,sizeof(ID_ED_NAME,quickslot[nowSlotIndex].slotName));
+					GetDlgItemText(hDlg,ID_ED_NAME,quickslot[nowSlotIndex].slotName,sizeof(quickslot[nowSlotIndex].slotName));
 					EndDialog(hDlg,wParam);
 					return TRUE;
 			}
