@@ -36,7 +36,7 @@ void CreateSaveCtrls(void *ctrls,HWND hWnd,HINSTANCE hInst){
 	c->btSlot[i]=CreateWindow("button",keys[i],WS_CHILD|WS_BORDER,0,0,0,0,hWnd,(HMENU)SAVECTRLS_BT_F11,hInst,NULL);i++;
 	c->btSlot[i]=CreateWindow("button",keys[i],WS_CHILD|WS_BORDER,0,0,0,0,hWnd,(HMENU)SAVECTRLS_BT_F12,hInst,NULL);
 	
-	c->liItems=CreateWindow("listbox",NULL,LBS_NOTIFY|WS_CHILD|WS_BORDER,0,0,0,0,hWnd,(HMENU)SAVECTRLS_LI_ITEMS,hInst,NULL);
+	c->liItems=CreateWindow("listbox",NULL,LBS_NOTIFY|WS_CHILD|WS_BORDER|LBS_MULTIPLESEL,0,0,0,0,hWnd,(HMENU)SAVECTRLS_LI_ITEMS,hInst,NULL);
 	c->btSave=CreateWindow("button","저장",WS_CHILD|WS_BORDER,0,0,0,0,hWnd,(HMENU)SAVECTRLS_BT_SAVE,hInst,NULL);
 	c->btFind=CreateWindow("button","스캔",WS_CHILD|WS_BORDER,0,0,0,0,hWnd,(HMENU)SAVECTRLS_BT_FIND,hInst,NULL);
 	c->btModi=CreateWindow("button","수정",WS_CHILD|WS_BORDER,0,0,0,0,hWnd,(HMENU)SAVECTRLS_BT_MODI,hInst,NULL);

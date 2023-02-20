@@ -202,6 +202,13 @@ void ShowItemList(QuickSlot slot,HWND list){
 void ShowItemInfo(char *name,Item item,HWND stText){
 	char info[2048]={0,};
 	
-	sprintf(info,"%s\n\n경로:%s\n\n매개변수:%s",strlen(name)?name:"-",item.path,item.parameter?item.parameter:"non");//strlen(name)?name:"-"
+	sprintf(info,"%s\n\n경로:%s\n\n매개변수:%s",strlen(name)?name:"-",item.path,strlen(item.parameter)?item.parameter:"-");//strlen(name)?name:"-"
 	SetWindowText(stText,info);
+}
+void CloseSlot(QuickSlot *slot){
+	int i;
+	for(i=0;i<slot->itemCount;i++){
+		PostMessage(slot->item[i].hWnd,WM_CLOSE,0,0);
+		slot->item[i].hWnd=0;
+	}
 }

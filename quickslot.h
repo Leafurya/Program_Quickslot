@@ -20,5 +20,6 @@ char SpreadQuickslot(QuickSlot *,int);
 void ShowItemList(QuickSlot,HWND);
 void ShowItemInfo(char *,Item,HWND);
 void ShowSlotData(QuickSlot *);
+void CloseSlot(QuickSlot *);
 
 #endif
