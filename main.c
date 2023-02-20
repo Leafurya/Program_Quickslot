@@ -62,10 +62,10 @@ int APIENTRY WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance
 	WndClass.style=CS_HREDRAW | CS_VREDRAW;
 	RegisterClass(&WndClass);
 
-//	AllocConsole();
-//	freopen("COIN$", "r", stdin);
-//	freopen("CONOUT$", "w", stdout);
-//	freopen("CONOUT$", "w", stderr);
+	AllocConsole(); 
+	freopen("COIN$", "r", stdin);
+	freopen("CONOUT$", "w", stdout);
+	freopen("CONOUT$", "w", stderr);
 	
 	if(!opendir("./data")){
 		mkdir("./data");
@@ -87,7 +87,7 @@ int APIENTRY WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance
 		DispatchMessage(&Message);
 	}
 
-	//FreeConsole();
+	FreeConsole();
 
 	return Message.wParam;
 }
@@ -165,7 +165,7 @@ LRESULT CALLBACK MainWndProc(HWND hWnd,UINT iMessage,WPARAM wParam,LPARAM lParam
 							printf("index:%d===========\n",index);
 							for(i=0;i<quickslot[index].itemCount;i++){
 								//quickslot[index].item[i].hWnd=0;
-								printf("max: %d| (%d,%d)%s\t |path: %s\n",quickslot[index].item[i].maximized,quickslot[index].item[i].xpos,quickslot[index].item[i].ypos,quickslot[index].item[i].name,quickslot[index].item[i].path);
+								printf("hWnd:%d\tmax: %d| (%d,%d)%s\t |path: %s\n",quickslot[index].item[i].hWnd,quickslot[index].item[i].maximized,quickslot[index].item[i].xpos,quickslot[index].item[i].ypos,quickslot[index].item[i].name,quickslot[index].item[i].path);
 							}
 						}
 						CreateNotification(hWnd,trayName,trayMessage);
@@ -295,8 +295,13 @@ void SaveCtrlsCommandFunc(WPARAM wParam,LPARAM lParam){
 					itemIndex=SendMessage(sc.liItems,LB_GETCURSEL,0,0);
 					printf("%d,%d,quickslot[nowSlotIndex].item[itemIndex].hWnd: %d\n",nowSlotIndex,itemIndex,quickslot[nowSlotIndex].item[itemIndex].hWnd);
 					if(!SetForegroundWindow(quickslot[nowSlotIndex].item[itemIndex].hWnd)){
-						printf("%d\n",GetLastError());
+						printf("%d %s\n",GetLastError(),strerror(errno));
 						MessageBox(mainWnd,"창을 찾을 수 없습니다.","알림",MB_OK);
+						break;
+					}
+					if(IsIconic(quickslot[nowSlotIndex].item[itemIndex].hWnd)){
+						//MessageBox(mainWnd,"창이 최소화 되어있습니다.","알림",MB_OK);
+						ShowWindow(quickslot[nowSlotIndex].item[itemIndex].hWnd,SW_NORMAL);
 					}
 					break;
 				case LBN_SELCHANGE:

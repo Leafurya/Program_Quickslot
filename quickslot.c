@@ -135,6 +135,10 @@ char SpreadQuickslot(QuickSlot *pOriginSlot,int slotIndex){
 		for(i=0;i<slot.itemCount;i++){
 			//item=items[i];
 			//printf("cmd: %s\n",cmd);
+			if(items[i].hWnd){
+				CloseHandle(items[i].hWnd);
+				items[i].hWnd=0;
+			}
 			ShellExecute(NULL,"open",items[i].path,strlen(items[i].parameter)?items[i].parameter:NULL,NULL,SW_SHOW);
 			Sleep(200);
 			printf("&items[i]:%p\n",&items[i]);
