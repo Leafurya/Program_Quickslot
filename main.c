@@ -302,9 +302,7 @@ void SaveCtrlsCommandFunc(WPARAM wParam,LPARAM lParam){
 		case SAVECTRLS_BT_SAVE:
 			//printf("done: %d\n",SaveQuickslot(quickslot,sizeof(quickslot)));
 			//printf("%d",DialogBox(g_hInst,MAKEINTRESOURCE(IDD_DIALOG2),mainWnd,(DLGPROC)NameDlgProc));
-			i=DialogBox(g_hInst,MAKEINTRESOURCE(IDD_DIALOG2),mainWnd,(DLGPROC)NameDlgProc);
-			printf("dlg return: %d\n",i);
-			if(i==DLG2_BT_CANCLE){
+			if(DialogBox(g_hInst,MAKEINTRESOURCE(IDD_DIALOG2),mainWnd,(DLGPROC)NameDlgProc)==DLG2_BT_CANCLE){
 				MessageBox(mainWnd,"저장을 취소했습니다.","알림",MB_OK);
 				break;
 			}
@@ -358,6 +356,12 @@ void SaveCtrlsCommandFunc(WPARAM wParam,LPARAM lParam){
 			ShowSaveButton(0);
 			break;
 		default:
+			if(IsWindowVisible(sc.btSave)){
+				if(MessageBox(mainWnd,"슬롯으로 이동하겠습니까?\n(저장되지 않은 내용은 사라집니다.)","알림",MB_YESNO)==IDNO){
+					break;
+				}
+				ZeroMemory(&quickslot[nowSlotIndex],sizeof(QuickSlot));
+			}
 			itemIndex=0;
 			nowSlotIndex=wParam-SAVECTRLS_BT_ORIGIN;
 			//printf("index: %d\n",nowSlotIndex);
