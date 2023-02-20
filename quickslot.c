@@ -50,6 +50,7 @@ char SaveQuickslot(QuickSlot *pQuickslot,int size){
 	FILE *file=fopen("data/slot","wb");
 	
 	if(file==NULL){
+		printf("errno:%d\n",errno);
 		printf("%s\n",strerror(errno));
 		return 0;
 	}

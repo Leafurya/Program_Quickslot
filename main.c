@@ -6,6 +6,7 @@
 #include <psapi.h>
 #include <strproc2.h>
 #include <ctrlmanager.h>
+#include <dirent.h>
 
 #include "quickslot.h"
 #include "ctrls.h"
@@ -45,6 +46,7 @@ int APIENTRY WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance
 	MSG Message;
 	WNDCLASS WndClass;
 	g_hInst=hInstance;
+	int show=SW_HIDE;
 	
 	programIcon=LoadIcon(g_hInst,MAKEINTRESOURCE(IDI_PROGRAMICON64));
 	
@@ -64,11 +66,20 @@ int APIENTRY WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance
 //	freopen("COIN$", "r", stdin);
 //	freopen("CONOUT$", "w", stdout);
 //	freopen("CONOUT$", "w", stderr);
-
+	
+	if(!opendir("./data")){
+		mkdir("./data");
+	}
+	if(!LoadQuickslot(&quickslot,sizeof(quickslot))){
+		show=SW_SHOW;
+		memset(quickslot,0,sizeof(quickslot));
+		//printf("zero memory\n");
+	}            
+	
 	hWnd=CreateWindow(mainWndClass,mainWndClass,WS_OVERLAPPEDWINDOW,
 		  CW_USEDEFAULT,CW_USEDEFAULT,500,300,
 		  NULL,(HMENU)NULL,hInstance,NULL);
-	ShowWindow(hWnd,SW_HIDE);
+	ShowWindow(hWnd,show);
 	//ShowWindow(hWnd,SW_SHOW);
 
 	while(GetMessage(&Message,0,0,0)) {
@@ -101,11 +112,7 @@ LRESULT CALLBACK MainWndProc(HWND hWnd,UINT iMessage,WPARAM wParam,LPARAM lParam
 			SetNowCtrlGroup(&cm,ID_SAVECTRLS);
 			SendMessage(hWnd,WM_SIZE,0,0);
 			//ShowWindow(hWnd,SW_HIDE);
-			if(!LoadQuickslot(&quickslot,sizeof(quickslot))){
-				ShowWindow(hWnd,SW_SHOW);
-				memset(quickslot,0,sizeof(quickslot));
-				//printf("zero memory\n");
-			}
+			
 			for(index=0;index<KEYCOUNT;index++){
 				//printf("index:%d===========\n",index);
 				for(i=0;i<quickslot[index].itemCount;i++){
