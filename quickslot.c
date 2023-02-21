@@ -36,7 +36,6 @@ char LoadQuickslot(QuickSlot (*pQuickslot)[KEYCOUNT],int size){
 	FILE *file=fopen("data/slot","rb");
 	
 	if(file==NULL){
-		printf("%s\n",strerror(errno));
 		return 0;
 	}
 	
@@ -50,8 +49,6 @@ char SaveQuickslot(QuickSlot *pQuickslot,int size){
 	FILE *file=fopen("data/slot","wb");
 	
 	if(file==NULL){
-		printf("errno:%d\n",errno);
-		printf("%s\n",strerror(errno));
 		return 0;
 	}
 	
@@ -74,7 +71,6 @@ char SaveQuickslot(QuickSlot *pQuickslot,int size){
 		return 1;
 	}
 BOOL CALLBACK GetHwndProc(HWND hWnd,LPARAM lParam){
-	//printf("%d\n",hWnd);
 	Item *target=(Item *)lParam;
 	BOOL isVisible=IsWindowVisible(hWnd);
 	DWORD exStyle=GetWindowLong(hWnd,GWL_EXSTYLE);
@@ -99,11 +95,8 @@ BOOL CALLBACK GetHwndProc(HWND hWnd,LPARAM lParam){
 	if(hProc){
 		GetModuleFileNameEx(hProc,NULL,tpath,1024);
 		sprintf(path,"\"%s\"\0",tpath);
-		//printf("%s\n%s\n\n",path,target->path);
 		if(!strcmp(path,target->path)){
 			if(IsNotHWNDInSlot(hWnd)){
-				//printf("hWnd:%d\n",hWnd);
-				printf("lParam: %p\n",lParam);
 				target->hWnd=hWnd;
 				CloseHandle(hProc);
 				if(IsZoomed(hWnd)){
@@ -127,28 +120,20 @@ char SpreadQuickslot(QuickSlot *pOriginSlot,int slotIndex){
 	
 	originSlotAdr=pOriginSlot;
 	
-	printf("SpreadQuickslot:%p\n",pOriginSlot[slotIndex].item);
-	printf("originSlotAdr:%p\n",originSlotAdr[slotIndex].item);
-	
 	ZeroMemory(info,sizeof(info));
 	if(slot.itemCount!=0){
 		for(i=0;i<slot.itemCount;i++){
-			//item=items[i];
-			//printf("cmd: %s\n",cmd);
 			if(items[i].hWnd){
 				CloseHandle(items[i].hWnd);
 				items[i].hWnd=0;
 			}
 			ShellExecute(NULL,"open",items[i].path,strlen(items[i].parameter)?items[i].parameter:NULL,NULL,SW_SHOW);
 			Sleep(200);
-			printf("&items[i]:%p\n",&items[i]);
 			do{
 				EnumWindows(GetHwndProc,(LPARAM)&items[i]);
 			}while(!items[i].hWnd);
 			
 			GetWindowRect(items[i].hWnd,&rect);
-			//MoveWindow(items[i].hWnd,items[i].xpos,items[i].ypos<0?100:items[i].ypos,rect.right-rect.left,rect.bottom-rect.top,TRUE);
-			printf("hWnd:%d\n",items[i].hWnd);
 			if(items[i].maximized){
 				MoveWindow(items[i].hWnd,items[i].xpos,items[i].ypos<0?100:items[i].ypos,500,500,TRUE);
 			}
@@ -163,20 +148,6 @@ char SpreadQuickslot(QuickSlot *pOriginSlot,int slotIndex){
 			}
 		}
 		memcpy(pOriginSlot[slotIndex].item,items,sizeof(pOriginSlot[slotIndex].item));
-//		Sleep(250);
-//		for(i=0;i<slot.itemCount;i++){
-//			//item=items[i];
-//			EnumWindows(GetHwndProc,(LPARAM)&items[i]);
-//			GetWindowRect(items[i].hWnd,&rect);
-//			MoveWindow(items[i].hWnd,items[i].xpos,items[i].ypos,rect.right-rect.left,rect.bottom-rect.top,TRUE);
-//			//printf("hWnd:%d\t%s\n",items[i].hWnd,items[i].path);
-//			if(items[i].maximized){
-//				ShowWindow(items[i].hWnd,SW_SHOWMAXIMIZED);
-//			}
-//			Sleep(250);
-//			//SetWindowText(item.hWnd,"solt item");
-//			//CloseHandle(target.hWnd);
-//		}
 		return 0;
 	}
 	return 1;
@@ -187,9 +158,6 @@ void ShowItemList(QuickSlot slot,HWND list){
 	
 	for(i=listCount;i>=0;i--){
 		SendMessage(list,LB_DELETESTRING,i,0);
-//		if(SendMessage(list,LB_DELETESTRING,i,0)==-1){
-//			//printf("%s\n",strerror(errno));
-//		}
 	}
 	for(i=0;i<slot.itemCount;i++){
 		SendMessage(list,LB_ADDSTRING,0,(LPARAM)slot.item[i].name);

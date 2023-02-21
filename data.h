@@ -11,7 +11,7 @@ typedef struct _item{
 	int xpos, ypos;
 	int w,h;
 	HWND hWnd;
-}Item, *LPItem;
+}Item;
 
 Item CreateItem(char *,char *,char,RECT,HWND);
 
