@@ -8,7 +8,7 @@
 
 typedef struct _quickslot{
 	Item item[ITEM_MAXSIZE];
-	char slotName[128];
+	char slotName[256];
 	char itemCount;
 }QuickSlot;
 //slot key is VK-VK_F1
@@ -20,5 +20,6 @@ char SpreadQuickslot(QuickSlot *,int);
 void ShowItemList(QuickSlot,HWND);
 void ShowItemInfo(char *,Item,HWND);
 void ShowSlotData(QuickSlot *);
+void CloseSlot(QuickSlot *);
 
 #endif

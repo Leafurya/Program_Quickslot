@@ -22,7 +22,7 @@ void CreateNotification(HWND hWnd,char *title,char *content){
 	ballData.uFlags=NIF_INFO;
 	ballData.uCallbackMessage=WM_TRAY_MSG;
 	ballData.hIcon=LoadIcon(NULL,IDI_APPLICATION);
-	ballData.uTimeout=1500;
+	ballData.uTimeout=700;
 	ballData.dwInfoFlags=NIIF_INFO;
 	strcpy(ballData.szInfoTitle,title);
 	strcpy(ballData.szInfo,content);
@@ -43,6 +43,9 @@ void TrayCommandFunc(HWND hWnd,LPARAM lParam){
 			SetForegroundWindow(hWnd);
 			GetCursorPos(&mousePos);
 			TrackPopupMenu(trayMenu,TPM_LEFTALIGN|TPM_RIGHTBUTTON,mousePos.x,mousePos.y,0,hWnd,NULL);
+			break;
+		case WM_LBUTTONUP:
+			ShowWindow(hWnd,SW_SHOW);
 			break;
 	}
 }

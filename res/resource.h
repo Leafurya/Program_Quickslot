@@ -6,7 +6,7 @@
 #define ID_BT_CANCLE                            40000
 #define ID_ED_PATH                              40002
 #define ID_ED_PARAM                             40003
-#define ID_BT_REMOVE                            40004
+//#define ID_BT_REMOVE                            40004
 #define ID_BT_OK                                40005
 
 #define IDD_DIALOG2                             200
