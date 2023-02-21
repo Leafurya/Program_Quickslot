@@ -22,6 +22,8 @@ BOOL CALLBACK EnumWindowsProc(HWND,LPARAM);
 BOOL CALLBACK ModiDlgProc(HWND,UINT,WPARAM,LPARAM);
 BOOL CALLBACK NameDlgProc(HWND,UINT,WPARAM,LPARAM);
 
+void InitWindow(HWND);
+void TimerFunc(HWND);
 void SaveCtrlsCommandFunc(WPARAM,LPARAM);
 void ShowSaveButton(char);
 
@@ -98,6 +100,7 @@ int APIENTRY WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance
 		FillRect(hdc,&rt,(HBRUSH)(COLOR_WINDOW));
 		SetBkMode(hdc,TRANSPARENT);
 	}
+	
 LRESULT CALLBACK MainWndProc(HWND hWnd,UINT iMessage,WPARAM wParam,LPARAM lParam)
 {
 	HDC hdc;
@@ -108,33 +111,7 @@ LRESULT CALLBACK MainWndProc(HWND hWnd,UINT iMessage,WPARAM wParam,LPARAM lParam
 	char trayMessage[32]={0};
 	switch(iMessage) {
 		case WM_CREATE:
-			CreateCtrlFont();
-			InitCtrlManager(&cm,&mainRect);
-			CreateSaveCtrls(&sc,hWnd,g_hInst);
-			RegistCtrlGroup(&cm,&sc,ID_SAVECTRLS,sizeof(SaveCtrls),MoveSaveCtrls);
-			SetNowCtrlGroup(&cm,ID_SAVECTRLS);
-			SendMessage(hWnd,WM_SIZE,0,0);
-			//ShowWindow(hWnd,SW_HIDE);
-			
-			for(index=0;index<KEYCOUNT;index++){
-				//printf("index:%d===========\n",index);
-				for(i=0;i<quickslot[index].itemCount;i++){
-					quickslot[index].item[i].hWnd=0;
-					//printf("max: %d| (%d,%d)%s\t |path: %s\n",quickslot[index].item[i].maximized,quickslot[index].item[i].xpos,quickslot[index].item[i].ypos,quickslot[index].item[i].name,quickslot[index].item[i].path);
-				}
-			}
-			SetTimer(hWnd,TIMER_INPUT,1,NULL);
-			//printf("%d,%d,%d\n",sizeof(HWND),sizeof(DWORD),sizeof(LPARAM));
-			
-			ShowItemList(quickslot[nowSlotIndex],sc.liItems);
-			ShowItemInfo(quickslot[nowSlotIndex].slotName,quickslot[nowSlotIndex].item[0],sc.stInfo);
-			
-			CreateTrayIcon(hWnd,programIcon,trayName);
-			ShowSlotData(quickslot);
-			ShowSaveButton(0);
-			
-			oldListProc=(WNDPROC)SetWindowLongPtr(sc.liItems,GWLP_WNDPROC,(LONG_PTR)ListProc);
-			
+			InitWindow(hWnd);
 			return 0;
 		case WM_SIZE:
 			if(wParam!=SIZE_MINIMIZED){
@@ -148,11 +125,8 @@ LRESULT CALLBACK MainWndProc(HWND hWnd,UINT iMessage,WPARAM wParam,LPARAM lParam
 			EndPaint(hWnd, &ps);
 			return 0;
 		case WM_KEYDOWN:
-			printf("keydown:%d\n",wParam);
 			switch(wParam){
 				case VK_ESCAPE:
-					//MoveWindow(wnd,0,0,1000,1000,TRUE);
-					printf("================================\n");
 					DestroyWindow(hWnd);
 					break;
 			}
@@ -160,35 +134,7 @@ LRESULT CALLBACK MainWndProc(HWND hWnd,UINT iMessage,WPARAM wParam,LPARAM lParam
 		case WM_TIMER:
 			switch(wParam){
 				case TIMER_INPUT:
-					if((index=GetSlotIndex())!=-1){
-						for(i=0;i<quickslot[index].itemCount;i++){
-							printf("%d\n",quickslot[index].item[i].hWnd);
-							if(quickslot[index].item[i].hWnd){
-								CloseSlot(&quickslot[index]);
-								sprintf(trayMessage,"\"%s\" 슬롯을 닫았습니다.",quickslot[index].slotName);
-								CreateNotification(hWnd,trayName,trayMessage);
-								return 0;
-							}
-						}
-						
-						printf("if((index=GetSlotIndex())!=-1):%p\n",quickslot[index].item);
-						if(SpreadQuickslot(quickslot,index)){
-							printf("empty slot\n");
-							break;
-						}
-						sprintf(trayMessage,"\"%s\" 슬롯을 열었습니다.",quickslot[index].slotName);
-						for(index=0;index<KEYCOUNT;index++){
-							printf("index:%d===========\n",index);
-							for(i=0;i<quickslot[index].itemCount;i++){
-								//quickslot[index].item[i].hWnd=0;
-								printf("hWnd:%d\tmax: %d| (%d,%d)%s\t |path: %s\n",quickslot[index].item[i].hWnd,quickslot[index].item[i].maximized,quickslot[index].item[i].xpos,quickslot[index].item[i].ypos,quickslot[index].item[i].name,quickslot[index].item[i].path);
-							}
-						}
-						CreateNotification(hWnd,trayName,trayMessage);
-						//sprintf(trayMessage,"F%d슬롯",nowSlotIndex+1);
-						ChangeTrayTitle(quickslot[index].slotName);
-						ShowSlotData(quickslot);
-					}
+					TimerFunc(hWnd);
 					break;
 			}
 			return 0;
@@ -223,18 +169,68 @@ LRESULT CALLBACK MainWndProc(HWND hWnd,UINT iMessage,WPARAM wParam,LPARAM lParam
 	}
 	return(DefWindowProc(hWnd,iMessage,wParam,lParam));
 }
-	BOOL IsFilteredWindow(char *name){
-		const char *windowFilter[]={"SystemSettings.exe","ApplicationFrameHost.exe","TextInputHost.exe","Program_Quickslot.exe"};
-		int i;
-		for(i=0;i<(sizeof(windowFilter)/sizeof(char *));i++){
-			if(!strcmp(name,windowFilter[i])){
-				return TRUE;
+void InitWindow(HWND hWnd){
+	int i;
+	int index;
+	int nowSlotIndex;
+	
+	CreateCtrlFont();
+	InitCtrlManager(&cm,&mainRect);
+	CreateSaveCtrls(&sc,hWnd,g_hInst);
+	RegistCtrlGroup(&cm,&sc,ID_SAVECTRLS,sizeof(SaveCtrls),MoveSaveCtrls);
+	SetNowCtrlGroup(&cm,ID_SAVECTRLS);
+	SendMessage(hWnd,WM_SIZE,0,0);
+	
+	for(index=0;index<KEYCOUNT;index++){
+		for(i=0;i<quickslot[index].itemCount;i++){
+			quickslot[index].item[i].hWnd=0;
+		}
+	}
+	SetTimer(hWnd,TIMER_INPUT,1,NULL);
+	
+	ShowItemList(quickslot[nowSlotIndex],sc.liItems);
+	ShowItemInfo(quickslot[nowSlotIndex].slotName,quickslot[nowSlotIndex].item[0],sc.stInfo);
+	
+	CreateTrayIcon(hWnd,programIcon,trayName);
+	ShowSaveButton(0);
+	
+	oldListProc=(WNDPROC)SetWindowLongPtr(sc.liItems,GWLP_WNDPROC,(LONG_PTR)ListProc);
+}
+void TimerFunc(HWND hWnd){
+	int index;
+	int i;
+	char trayMessage[32]={0};
+	
+	if((index=GetSlotIndex())!=-1){
+		for(i=0;i<quickslot[index].itemCount;i++){
+			if(quickslot[index].item[i].hWnd){
+				CloseSlot(&quickslot[index]);
+				sprintf(trayMessage,"\"%s\" 슬롯을 닫았습니다.",quickslot[index].slotName);
+				CreateNotification(hWnd,trayName,trayMessage);
+				return;
 			}
 		}
-		return FALSE;
+		if(SpreadQuickslot(quickslot,index)){
+			return;
+		}
+		sprintf(trayMessage,"\"%s\" 슬롯을 열었습니다.",quickslot[index].slotName);
+		CreateNotification(hWnd,trayName,trayMessage);
+		ChangeTrayTitle(quickslot[index].slotName);
 	}
+}
+
+
+BOOL IsFilteredWindow(char *name){
+	const char *windowFilter[]={"SystemSettings.exe","ApplicationFrameHost.exe","TextInputHost.exe","Program_Quickslot.exe"};
+	int i;
+	for(i=0;i<(sizeof(windowFilter)/sizeof(char *));i++){
+		if(!strcmp(name,windowFilter[i])){
+			return TRUE;
+		}
+	}
+	return FALSE;
+}
 BOOL CALLBACK EnumWindowsProc(HWND hWnd,LPARAM lParam){
-	//printf("%d\n",hWnd);
 	QuickSlot *lpQuickslot=(QuickSlot *)lParam;
 	
 	BOOL isVisible=IsWindowVisible(hWnd);
@@ -269,18 +265,8 @@ BOOL CALLBACK EnumWindowsProc(HWND hWnd,LPARAM lParam){
 		if(!IsFilteredWindow(progName)){
 			GetWindowInfo(hWnd,&wInfo);
 			sprintf(tpath,"\"%s\"",path);
-			//printf("hWnd: %d\ttpath: %s\n",hWnd,tpath);
-			//SendMessage(hWnd,WM_SIZE,SIZE_MINIMIZED,0);
-//			for(i=0;i<lpQuickslot->itemCount;i++){
-//				if(!strcmp(lpQuickslot->item[i].path,tpath)){
-//					DeleteString(&str);
-//					CloseHandle(hProc);
-//					return TRUE;
-//				}
-//			}
 			GetWindowRect(hWnd,&rect);
 			lpQuickslot->item[lpQuickslot->itemCount++]=CreateItem(path,NULL,IsZoomed(hWnd),wInfo.rcWindow,hWnd);
-			//printf("pid:%d\n",pID);
 		}
 		DeleteString(&str);
 	}
@@ -299,53 +285,39 @@ void ShowSaveButton(char val){
 }
 void SaveCtrlsCommandFunc(WPARAM wParam,LPARAM lParam){
 	int i;
-	//int itemIndex=0;
 	char msgString[256];
 	char reList=1;
 	switch(LOWORD(wParam)){
 		case SAVECTRLS_LI_ITEMS:
-			//printf("list click\n");
 			switch(HIWORD(wParam)){
 				case LBN_DBLCLK:
-					//printf("dblcick\n");
 					itemIndex=SendMessage(sc.liItems,LB_GETCURSEL,0,0);
-					printf("%d,%d,quickslot[nowSlotIndex].item[itemIndex].hWnd: %d\n",nowSlotIndex,itemIndex,quickslot[nowSlotIndex].item[itemIndex].hWnd);
 					if(!SetForegroundWindow(quickslot[nowSlotIndex].item[itemIndex].hWnd)){
-						printf("%d %s\n",GetLastError(),strerror(errno));
 						MessageBox(mainWnd,"창을 찾을 수 없습니다.","알림",MB_OK);
 						break;
 					}
 					if(IsIconic(quickslot[nowSlotIndex].item[itemIndex].hWnd)){
-						//MessageBox(mainWnd,"창이 최소화 되어있습니다.","알림",MB_OK);
 						ShowWindow(quickslot[nowSlotIndex].item[itemIndex].hWnd,SW_NORMAL);
 					}
 					break;
 				case LBN_SELCHANGE:
 					itemIndex=SendMessage(sc.liItems,LB_GETCURSEL,0,0);
 					ShowAboutItemFunc(itemIndex,0);
-					//ShowItemInfo(nowSlotIndex+1,quickslot[nowSlotIndex].item[itemIndex],sc.stInfo);
 					break;
 			}
 			break;
 		case SAVECTRLS_BT_SAVE:
-			//printf("done: %d\n",SaveQuickslot(quickslot,sizeof(quickslot)));
-			//printf("%d",DialogBox(g_hInst,MAKEINTRESOURCE(IDD_DIALOG2),mainWnd,(DLGPROC)NameDlgProc));
 			if(DialogBox(g_hInst,MAKEINTRESOURCE(IDD_DIALOG2),mainWnd,(DLGPROC)NameDlgProc)==DLG2_BT_CANCLE){
 				MessageBox(mainWnd,"저장을 취소했습니다.","알림",MB_OK);
 				break;
 			}
 			SaveQuickslot(quickslot,sizeof(quickslot));
-			printf("quickslot[nowSlotIndex].slotName: %s|\n",quickslot[nowSlotIndex].slotName); 
 			ShowItemInfo(quickslot[nowSlotIndex].slotName,quickslot[nowSlotIndex].item[0],sc.stInfo);
-			//ShowItemInfo(quickslot)
 			ShowSaveButton(0);
 			saving=0;
-//			sprintf(msgString,"F%d슬롯을 저장했습니다.",nowSlotIndex+1);
-//			MessageBox(mainWnd,msgString,"알림",MB_OK);
 			break;
 		case SAVECTRLS_BT_FIND:
 			itemIndex=0;
-			//printf("index:%d\n",nowSlotIndex);
 			if(quickslot[nowSlotIndex].itemCount!=0){
 				if(MessageBox(mainWnd,"슬롯을 교체하겠습니까?","알림",MB_YESNO)==IDNO){
 					reList=0;
@@ -355,10 +327,6 @@ void SaveCtrlsCommandFunc(WPARAM wParam,LPARAM lParam){
 			saving=1;
 			ZeroMemory(&quickslot[nowSlotIndex],sizeof(QuickSlot));
 			EnumWindows(EnumWindowsProc,(LPARAM)&quickslot[nowSlotIndex]);
-			//ShowAboutItemFunc(itemIndex,1);
-//			for(i=0;i<quickslot[nowSlotIndex].itemCount;i++){
-//				printf("max: %d| (%d,%d) |path: %s\n",quickslot[nowSlotIndex].item[i].maximized,quickslot[nowSlotIndex].item[i].xpos,quickslot[nowSlotIndex].item[i].ypos,quickslot[nowSlotIndex].item[i].path);
-//			}
 			MessageBox(mainWnd,"슬롯에 저장할 프로그램을 감지했습니다\n매개변수를 설정하여 정교한 작업을 시작하세요.\n모든 설정이 끝난 후 저장버튼을 클릭해주세요.","알림",MB_OK);
 			ShowAboutItemFunc(itemIndex,1);
 			ShowSaveButton(1);
@@ -394,7 +362,6 @@ void SaveCtrlsCommandFunc(WPARAM wParam,LPARAM lParam){
 			}
 			itemIndex=0;
 			nowSlotIndex=wParam-SAVECTRLS_BT_ORIGIN;
-			//printf("index: %d\n",nowSlotIndex);
 			ShowAboutItemFunc(itemIndex,1);
 			ShowSaveButton(0);
 			break;
@@ -419,18 +386,6 @@ BOOL CALLBACK ModiDlgProc(HWND hDlg,UINT iMessage,WPARAM wParam,LPARAM lParam){
 					
 					EndDialog(hDlg,wParam);
 					return TRUE;
-//				case ID_BT_REMOVE:
-//					if(MessageBox(hDlg,"아이템을 삭제하겠습니까?","알림",MB_YESNO)==IDYES){
-//						ZeroMemory(&quickslot[nowSlotIndex].item[itemIndex],sizeof(Item));
-//						for(i=itemIndex;i<quickslot[nowSlotIndex].itemCount-1;i++){
-//							quickslot[nowSlotIndex].item[i]=quickslot[nowSlotIndex].item[i+1];
-//						}
-//						quickslot[nowSlotIndex].itemCount--;
-//						SaveQuickslot(quickslot,sizeof(quickslot));
-//						EndDialog(hDlg,wParam);
-//						return TRUE;
-//					}
-//					break;
 			}
 	}
 	return FALSE;
@@ -469,23 +424,25 @@ LRESULT CALLBACK ListProc(HWND hWnd,UINT iMessage,WPARAM wParam,LPARAM lParam){
 			switch(wParam){
 				case VK_DELETE:
 					selCount=SendMessage(hWnd,LB_GETSELCOUNT,0,0);
-					if(selCount){
-						if(MessageBox(mainWnd,"아이템을 삭제하겠습니까?","알림",MB_YESNO)==IDYES){
-							SendMessage(hWnd,LB_GETSELITEMS,quickslot[nowSlotIndex].itemCount,(LPARAM)selItems);
-							for(j=selCount-1;j>=0;j--){
-								itemIndex=selItems[j];
-								ZeroMemory(&quickslot[nowSlotIndex].item[itemIndex],sizeof(Item));
-								for(i=itemIndex;i<quickslot[nowSlotIndex].itemCount-1;i++){
-									quickslot[nowSlotIndex].item[i]=quickslot[nowSlotIndex].item[i+1];
-								}
-								quickslot[nowSlotIndex].itemCount--;
-							}
-						}
-						if(!saving){
-							SaveQuickslot(quickslot,sizeof(quickslot));
-						}
-						ShowAboutItemFunc(itemIndex,1);
+					if(!selCount){
+						break;
 					}
+					if(MessageBox(mainWnd,"아이템을 삭제하겠습니까?","알림",MB_YESNO)==IDNO){
+						break;
+					}
+					SendMessage(hWnd,LB_GETSELITEMS,quickslot[nowSlotIndex].itemCount,(LPARAM)selItems);
+					for(j=selCount-1;j>=0;j--){
+						itemIndex=selItems[j];
+						ZeroMemory(&quickslot[nowSlotIndex].item[itemIndex],sizeof(Item));
+						for(i=itemIndex;i<quickslot[nowSlotIndex].itemCount-1;i++){
+							quickslot[nowSlotIndex].item[i]=quickslot[nowSlotIndex].item[i+1];
+						}
+						quickslot[nowSlotIndex].itemCount--;
+					}
+					if(!saving){
+						SaveQuickslot(quickslot,sizeof(quickslot));
+					}
+					ShowAboutItemFunc(itemIndex,1);
 					break;
 				case VK_CONTROL:
 					ctrlUp=0;
