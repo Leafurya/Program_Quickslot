@@ -3,10 +3,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <tlhelp32.h>
-#include <psapi.h>
 #include <strproc2.h>
 #include <ctrlmanager.h>
 #include <dirent.h>
+#include <psapi.h>
 
 #include "quickslot.h"
 #include "ctrls.h"
@@ -195,6 +195,7 @@ void InitWindow(HWND hWnd){
 	ShowSaveButton(0);
 	
 	oldListProc=(WNDPROC)SetWindowLongPtr(sc.liItems,GWLP_WNDPROC,(LONG_PTR)ListProc);
+	ShowSlotData(quickslot);
 }
 void TimerFunc(HWND hWnd){
 	int index;
@@ -214,6 +215,7 @@ void TimerFunc(HWND hWnd){
 			return;
 		}
 		sprintf(trayMessage,"\"%s\" 슬롯을 열었습니다.",quickslot[index].slotName);
+		ShowSlotData(quickslot);
 		CreateNotification(hWnd,trayName,trayMessage);
 		ChangeTrayTitle(quickslot[index].slotName);
 	}

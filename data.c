@@ -22,5 +22,7 @@ Item CreateItem(char *path,char *parameter,char maximized,RECT winPos,HWND hWnd)
 	
 	DeleteString(&string);
 	
+	printf("(%d,%d) path: %s | %s\n",item.xpos,item.ypos,item.path,item.parameter);
+	
 	return item;
 }

@@ -1,10 +1,14 @@
 #include "quickslot.h"
 #include <stdlib.h>
 #include <stdio.h>
+#include <strproc2.h>
 #include <shellapi.h>
 #include <psapi.h>
 
+#include "list.h"
+
 QuickSlot *originSlotAdr;
+List list;
 
 void ShowSlotData(QuickSlot *slot){
 	int i,j;
@@ -12,6 +16,7 @@ void ShowSlotData(QuickSlot *slot){
 	for(i=0;i<KEYCOUNT;i++){
 		for(j=0;j<slot[i].itemCount;j++){
 			printf("maxi:%d\thWnd:%d\tparam: %s|path:%s\n",slot[i].item[j].maximized,slot[i].item[j].hWnd,slot[i].item[j].parameter,slot[i].item[j].path);
+			printf("(%d,%d)\n",slot[i].item[j].xpos,slot[i].item[j].ypos);
 		}
 		printf("-------------------------\n");
 	}
@@ -57,7 +62,7 @@ char SaveQuickslot(QuickSlot *pQuickslot,int size){
 	fclose(file);
 	return 1;
 }
-	char IsNotHWNDInSlot(HWND hWnd){
+	BOOL IsNotHWNDInSlot(HWND hWnd){
 		int i,j;
 		for(i=0;i<KEYCOUNT;i++){
 			if(originSlotAdr[i].itemCount!=0){
@@ -70,34 +75,60 @@ char SaveQuickslot(QuickSlot *pQuickslot,int size){
 		}
 		return 1;
 	}
+	BOOL FilterWindow(HWND hWnd){
+		BOOL isVisible=IsWindowVisible(hWnd);
+		DWORD exStyle=GetWindowLong(hWnd,GWL_EXSTYLE);
+		BOOL isAppWindow=(exStyle&WS_EX_APPWINDOW);
+		BOOL isToolWindow=(exStyle&WS_EX_TOOLWINDOW);
+		BOOL isOwned=GetWindow(hWnd,GW_OWNER)?TRUE:FALSE;
+		
+		if(!isVisible){
+			return TRUE;
+		}
+		if(!(isAppWindow||(!isToolWindow&&!isOwned))){
+			return TRUE;
+		}
+		return FALSE;
+	}
+	BOOL ComparePreWindows(char *str,List *list){
+		char *data; 
+		while(MoveNext(list)){
+			data=(char *)GetCurData(*list);
+			//printf("GetCurData: %s\n",data);
+			//printf("GetCurStr : %s\n\n",str);
+			if(!strcmp(str,data)){
+				free(str);
+				ReturnToHead(list);
+				return 0;
+			}
+		}
+		AddData(list,str);
+		ReturnToHead(list);
+		return 1;
+	}
 BOOL CALLBACK GetHwndProc(HWND hWnd,LPARAM lParam){
 	Item *target=(Item *)lParam;
-	BOOL isVisible=IsWindowVisible(hWnd);
-	DWORD exStyle=GetWindowLong(hWnd,GWL_EXSTYLE);
-	BOOL isAppWindow=(exStyle&WS_EX_APPWINDOW);
-	BOOL isToolWindow=(exStyle&WS_EX_TOOLWINDOW);
-	BOOL isOwned=GetWindow(hWnd,GW_OWNER)?TRUE:FALSE;
-	
 	DWORD pID;
 	HANDLE hProc;
 	char path[1024]={0};
 	char tpath[1024]={0};
+	char *data;
 	int i;
 	
-	if(!isVisible){
+	if(FilterWindow(hWnd)){
 		return TRUE;
 	}
-	if(!(isAppWindow||(!isToolWindow&&!isOwned))){
-		return TRUE;
-	}
+	
 	GetWindowThreadProcessId(hWnd,&pID);
 	hProc=OpenProcess(PROCESS_QUERY_INFORMATION|PROCESS_VM_READ,FALSE,pID);
 	if(hProc){
 		GetModuleFileNameEx(hProc,NULL,tpath,1024);
-		sprintf(path,"\"%s\"\0",tpath);
-		if(!strcmp(path,target->path)){
-			if(IsNotHWNDInSlot(hWnd)){
+		data=GetString("%d\"%s\"\0",hWnd,tpath);
+		if(ComparePreWindows(data,&list)){
+			sprintf(path,"\"%s\"",tpath);
+			if(!strcmp(path,target->path)){
 				target->hWnd=hWnd;
+				//printf("path: %s\t%d\n\n",target->path,target->hWnd);
 				CloseHandle(hProc);
 				if(IsZoomed(hWnd)){
 					ShowWindow(hWnd,SW_SHOWNORMAL);
@@ -105,6 +136,31 @@ BOOL CALLBACK GetHwndProc(HWND hWnd,LPARAM lParam){
 				return FALSE;
 			}
 		}
+		//printf("path: %s\t%d\n\n",target->path,target->hWnd);
+		ZeroMemory(path,sizeof(path));
+	}
+	CloseHandle(hProc);
+	return TRUE;
+}
+BOOL CALLBACK SavePreWindows(HWND hWnd,LPARAM lParam){
+	List *list=(List *)lParam;
+	DWORD pID;
+	HANDLE hProc;
+	char path[1024]={0};
+	char tpath[1024]={0};
+	int i;
+	char *data;
+	
+	if(FilterWindow(hWnd)){
+		return TRUE;
+	}
+	
+	GetWindowThreadProcessId(hWnd,&pID);
+	hProc=OpenProcess(PROCESS_QUERY_INFORMATION|PROCESS_VM_READ,FALSE,pID);
+	if(hProc){
+		GetModuleFileNameEx(hProc,NULL,tpath,1024);
+		sprintf(path,"%d\"%s\"\0",hWnd,tpath);
+		AddData(list,(char *)GetString("%d\"%s\"\0",hWnd,tpath));
 		ZeroMemory(path,sizeof(path));
 	}
 	CloseHandle(hProc);
@@ -112,7 +168,7 @@ BOOL CALLBACK GetHwndProc(HWND hWnd,LPARAM lParam){
 }
 char SpreadQuickslot(QuickSlot *pOriginSlot,int slotIndex){
 	int i;
-	SHELLEXECUTEINFOA info[ITEM_MAXSIZE]={0,};
+	//SHELLEXECUTEINFOA info[ITEM_MAXSIZE]={0,};
 	RECT rect;
 	char cmd[2048]={0};
 	QuickSlot slot=pOriginSlot[slotIndex];
@@ -120,8 +176,16 @@ char SpreadQuickslot(QuickSlot *pOriginSlot,int slotIndex){
 	
 	originSlotAdr=pOriginSlot;
 	
-	ZeroMemory(info,sizeof(info));
+	
+	//ZeroMemory(info,sizeof(info));
 	if(slot.itemCount!=0){
+		InitList(&list);
+		EnumWindows(SavePreWindows,(LPARAM)&list);
+//		while(MoveNext(&list)){
+//			printf("list: %s\n",(char *)GetCurData(list));
+//		}
+//		ReturnToHead(&list);
+//		printf("\n");
 		for(i=0;i<slot.itemCount;i++){
 			if(items[i].hWnd){
 				CloseHandle(items[i].hWnd);
@@ -132,22 +196,16 @@ char SpreadQuickslot(QuickSlot *pOriginSlot,int slotIndex){
 			do{
 				EnumWindows(GetHwndProc,(LPARAM)&items[i]);
 			}while(!items[i].hWnd);
-			
-			GetWindowRect(items[i].hWnd,&rect);
-			if(items[i].maximized){
-				MoveWindow(items[i].hWnd,items[i].xpos,items[i].ypos<0?100:items[i].ypos,500,500,TRUE);
-			}
-			else{
-				MoveWindow(items[i].hWnd,items[i].xpos,items[i].ypos<0?100:items[i].ypos,rect.right-rect.left,rect.bottom-rect.top,TRUE);
-			} 
-			Sleep(100);
 		}
 		for(i=0;i<slot.itemCount;i++){
+			MoveWindow(items[i].hWnd,items[i].xpos,items[i].ypos<0?100:items[i].ypos,items[i].w,items[i].h,TRUE);
+			Sleep(100);
 			if(items[i].maximized){
 				ShowWindow(items[i].hWnd,SW_SHOWMAXIMIZED);
 			}
 		}
 		memcpy(pOriginSlot[slotIndex].item,items,sizeof(pOriginSlot[slotIndex].item));
+		FreeList(&list);
 		return 0;
 	}
 	return 1;
