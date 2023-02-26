@@ -153,6 +153,7 @@ LRESULT CALLBACK MainWndProc(HWND hWnd,UINT iMessage,WPARAM wParam,LPARAM lParam
 							break;
 						case WM_OPEN_PROGRAM:
 							ShowWindow(hWnd,SW_SHOW);
+							SetForegroundWindow(hWnd);
 							break;
 					}
 					break;

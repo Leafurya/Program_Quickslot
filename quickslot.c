@@ -199,10 +199,11 @@ char SpreadQuickslot(QuickSlot *pOriginSlot,int slotIndex){
 		}
 		for(i=0;i<slot.itemCount;i++){
 			MoveWindow(items[i].hWnd,items[i].xpos,items[i].ypos<0?100:items[i].ypos,items[i].w,items[i].h,TRUE);
-			Sleep(100);
 			if(items[i].maximized){
 				ShowWindow(items[i].hWnd,SW_SHOWMAXIMIZED);
 			}
+			//SetForegroundWindow(items[i].hWnd);
+			Sleep(100);
 		}
 		memcpy(pOriginSlot[slotIndex].item,items,sizeof(pOriginSlot[slotIndex].item));
 		FreeList(&list);
