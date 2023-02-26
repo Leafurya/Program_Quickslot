@@ -421,6 +421,7 @@ LRESULT CALLBACK ListProc(HWND hWnd,UINT iMessage,WPARAM wParam,LPARAM lParam){
 	static char ctrlUp=1;
 	int index,i,j,itemIndex;
 	int selItems[16];
+	Item tItem;
 	
 	switch(iMessage){
 		case WM_KEYDOWN:
@@ -449,6 +450,36 @@ LRESULT CALLBACK ListProc(HWND hWnd,UINT iMessage,WPARAM wParam,LPARAM lParam){
 					break;
 				case VK_CONTROL:
 					ctrlUp=0;
+					break;
+				case VK_UP:
+					selCount=SendMessage(hWnd,LB_GETSELCOUNT,0,0);
+					if(selCount!=1){
+						break;
+					}
+					index=SendMessage(hWnd,LB_GETCURSEL,0,0);
+					if(index==0){
+						break;
+					}
+					tItem=quickslot[nowSlotIndex].item[index];
+					quickslot[nowSlotIndex].item[index]=quickslot[nowSlotIndex].item[index-1];
+					quickslot[nowSlotIndex].item[index-1]=tItem;
+					ShowItemList(quickslot[nowSlotIndex],sc.liItems);
+					SendMessage(hWnd,LB_SETSEL,TRUE,index-1);
+					break;
+				case VK_DOWN:
+					selCount=SendMessage(hWnd,LB_GETSELCOUNT,0,0);
+					if(selCount!=1){
+						break;
+					}
+					index=SendMessage(hWnd,LB_GETCURSEL,0,0);
+					if(index>=quickslot[nowSlotIndex].itemCount){
+						break;
+					}
+					tItem=quickslot[nowSlotIndex].item[index];
+					quickslot[nowSlotIndex].item[index]=quickslot[nowSlotIndex].item[index+1];
+					quickslot[nowSlotIndex].item[index+1]=tItem;
+					ShowItemList(quickslot[nowSlotIndex],sc.liItems);
+					SendMessage(hWnd,LB_SETSEL,TRUE,index+1);
 					break;
 			}
 			return 0;
