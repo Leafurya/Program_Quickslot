@@ -67,10 +67,10 @@ int APIENTRY WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance
 	WndClass.style=CS_HREDRAW | CS_VREDRAW;
 	RegisterClass(&WndClass);
 
-//	AllocConsole(); 
-//	freopen("COIN$", "r", stdin);
-//	freopen("CONOUT$", "w", stdout);
-//	freopen("CONOUT$", "w", stderr); 
+	AllocConsole(); 
+	freopen("COIN$", "r", stdin);
+	freopen("CONOUT$", "w", stdout);
+	freopen("CONOUT$", "w", stderr); 
 	
 	if(!opendir("./data")){
 		mkdir("./data");
@@ -92,7 +92,7 @@ int APIENTRY WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance
 		DispatchMessage(&Message);
 	}
 
-	//FreeConsole();
+	FreeConsole();
 
 	return Message.wParam;
 }
@@ -352,6 +352,7 @@ void SaveCtrlsCommandFunc(WPARAM wParam,LPARAM lParam){
 			if(MessageBox(mainWnd,"슬롯을 삭제하겠습니까?","알림",MB_YESNO)==IDYES){
 				ZeroMemory(&quickslot[nowSlotIndex],sizeof(QuickSlot));
 				SaveQuickslot(quickslot,sizeof(quickslot));
+				saving=0;
 			}
 			ShowAboutItemFunc(itemIndex,1);
 			ShowSaveButton(0);
@@ -416,6 +417,31 @@ BOOL CALLBACK NameDlgProc(HWND hDlg,UINT iMessage,WPARAM wParam,LPARAM lParam){
 	}
 	return FALSE;
 }
+	void SwitchItemPosition(HWND hWnd,char direction){
+		int selCount;
+		int index;
+		Item tItem;
+		
+		selCount=SendMessage(hWnd,LB_GETSELCOUNT,0,0);
+		if(selCount!=1){
+			MessageBox(mainWnd,"하나만 선택해 주시기 바랍니다.","알림",MB_OK);
+			return;
+		}
+		index=SendMessage(hWnd,LB_GETCURSEL,0,0);
+		printf("index: %d,itemCount: %d\n",index,quickslot[nowSlotIndex].itemCount);
+		if(((direction<0)?(index==0):((index+1)>=quickslot[nowSlotIndex].itemCount))){
+			return;
+		}
+		tItem=quickslot[nowSlotIndex].item[index];
+		quickslot[nowSlotIndex].item[index]=quickslot[nowSlotIndex].item[index+direction];
+		quickslot[nowSlotIndex].item[index+direction]=tItem;
+		ShowItemList(quickslot[nowSlotIndex],sc.liItems);
+		
+		SendMessage(hWnd,LB_SETSEL,TRUE,index+direction);
+		if(!saving){
+			SaveQuickslot(quickslot,sizeof(quickslot));
+		}
+	}
 LRESULT CALLBACK ListProc(HWND hWnd,UINT iMessage,WPARAM wParam,LPARAM lParam){
 	int selCount;
 	static char ctrlUp=1;
@@ -452,34 +478,42 @@ LRESULT CALLBACK ListProc(HWND hWnd,UINT iMessage,WPARAM wParam,LPARAM lParam){
 					ctrlUp=0;
 					break;
 				case VK_UP:
-					selCount=SendMessage(hWnd,LB_GETSELCOUNT,0,0);
-					if(selCount!=1){
-						break;
-					}
-					index=SendMessage(hWnd,LB_GETCURSEL,0,0);
-					if(index==0){
-						break;
-					}
-					tItem=quickslot[nowSlotIndex].item[index];
-					quickslot[nowSlotIndex].item[index]=quickslot[nowSlotIndex].item[index-1];
-					quickslot[nowSlotIndex].item[index-1]=tItem;
-					ShowItemList(quickslot[nowSlotIndex],sc.liItems);
-					SendMessage(hWnd,LB_SETSEL,TRUE,index-1);
+					SwitchItemPosition(hWnd,-1);
+//					selCount=SendMessage(hWnd,LB_GETSELCOUNT,0,0);
+//					if(selCount!=1){
+//						break;
+//					}
+//					index=SendMessage(hWnd,LB_GETCURSEL,0,0);
+//					if(index==0){
+//						break;
+//					}
+//					tItem=quickslot[nowSlotIndex].item[index];
+//					quickslot[nowSlotIndex].item[index]=quickslot[nowSlotIndex].item[index-1];
+//					quickslot[nowSlotIndex].item[index-1]=tItem;
+//					ShowItemList(quickslot[nowSlotIndex],sc.liItems);
+//					SendMessage(hWnd,LB_SETSEL,TRUE,index-1);
+//					if(!saving){
+//						SaveQuickslot(quickslot,sizeof(quickslot));
+//					}
 					break;
 				case VK_DOWN:
-					selCount=SendMessage(hWnd,LB_GETSELCOUNT,0,0);
-					if(selCount!=1){
-						break;
-					}
-					index=SendMessage(hWnd,LB_GETCURSEL,0,0);
-					if(index>=quickslot[nowSlotIndex].itemCount){
-						break;
-					}
-					tItem=quickslot[nowSlotIndex].item[index];
-					quickslot[nowSlotIndex].item[index]=quickslot[nowSlotIndex].item[index+1];
-					quickslot[nowSlotIndex].item[index+1]=tItem;
-					ShowItemList(quickslot[nowSlotIndex],sc.liItems);
-					SendMessage(hWnd,LB_SETSEL,TRUE,index+1);
+					SwitchItemPosition(hWnd,1);
+//					selCount=SendMessage(hWnd,LB_GETSELCOUNT,0,0);
+//					if(selCount!=1){
+//						break;
+//					}
+//					index=SendMessage(hWnd,LB_GETCURSEL,0,0);
+//					if(index>=quickslot[nowSlotIndex].itemCount){
+//						break;
+//					}
+//					tItem=quickslot[nowSlotIndex].item[index];
+//					quickslot[nowSlotIndex].item[index]=quickslot[nowSlotIndex].item[index+1];
+//					quickslot[nowSlotIndex].item[index+1]=tItem;
+//					ShowItemList(quickslot[nowSlotIndex],sc.liItems);
+//					SendMessage(hWnd,LB_SETSEL,TRUE,index+1);
+//					if(!saving){
+//						SaveQuickslot(quickslot,sizeof(quickslot));
+//					}
 					break;
 			}
 			return 0;
