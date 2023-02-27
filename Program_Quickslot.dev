@@ -29,7 +29,7 @@ IncludeVersionInfo=0
 SupportXPThemes=0
 CompilerSet=0
 CompilerSettings=0000000000000000000000000
-UnitCount=10
+UnitCount=12
 
 [VersionInfo]
 Major=1
@@ -150,5 +150,22 @@ OverrideBuildCmd=0
 BuildCmd=
 
 [Unit12]
-FileName=subproc.c
+FileName=list.c
+CompileCpp=0
+Folder=
+Compile=1
+Link=1
+Priority=1000
+OverrideBuildCmd=0
+BuildCmd=
+
+[Unit11]
+FileName=list.h
+CompileCpp=0
+Folder=
+Compile=1
+Link=1
+Priority=1000
+OverrideBuildCmd=0
+BuildCmd=
 

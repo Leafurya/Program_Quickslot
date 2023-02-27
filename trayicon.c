@@ -46,6 +46,7 @@ void TrayCommandFunc(HWND hWnd,LPARAM lParam){
 			break;
 		case WM_LBUTTONUP:
 			ShowWindow(hWnd,SW_SHOW);
+			SetForegroundWindow(hWnd);
 			break;
 	}
 }
