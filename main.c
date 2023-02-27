@@ -92,7 +92,7 @@ int APIENTRY WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance
 		DispatchMessage(&Message);
 	}
 
-	//FreeConsole();
+//	FreeConsole();
 
 	return Message.wParam;
 }
@@ -216,7 +216,7 @@ void TimerFunc(HWND hWnd){
 			return;
 		}
 		sprintf(trayMessage,"\"%s\" 슬롯을 열었습니다.",quickslot[index].slotName);
-		ShowSlotData(quickslot);
+		//ShowSlotData(quickslot);
 		CreateNotification(hWnd,trayName,trayMessage);
 		ChangeTrayTitle(quickslot[index].slotName);
 	}
