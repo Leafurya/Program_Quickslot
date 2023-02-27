@@ -67,10 +67,10 @@ int APIENTRY WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance
 	WndClass.style=CS_HREDRAW | CS_VREDRAW;
 	RegisterClass(&WndClass);
 
-	AllocConsole(); 
-	freopen("COIN$", "r", stdin);
-	freopen("CONOUT$", "w", stdout);
-	freopen("CONOUT$", "w", stderr); 
+//	AllocConsole(); 
+//	freopen("COIN$", "r", stdin);
+//	freopen("CONOUT$", "w", stdout);
+//	freopen("CONOUT$", "w", stderr); 
 	
 	if(!opendir("./data")){
 		mkdir("./data");
@@ -92,7 +92,7 @@ int APIENTRY WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance
 		DispatchMessage(&Message);
 	}
 
-	FreeConsole();
+	//FreeConsole();
 
 	return Message.wParam;
 }

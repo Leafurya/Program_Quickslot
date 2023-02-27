@@ -175,6 +175,7 @@ char SpreadQuickslot(QuickSlot *pOriginSlot,int slotIndex){
 	Item *items=pOriginSlot[slotIndex].item;
 	
 	originSlotAdr=pOriginSlot;
+	char timeout=0;
 	
 	
 	//ZeroMemory(info,sizeof(info));
@@ -191,10 +192,16 @@ char SpreadQuickslot(QuickSlot *pOriginSlot,int slotIndex){
 				CloseHandle(items[i].hWnd);
 				items[i].hWnd=0;
 			}
+			timeout=0;
 			ShellExecute(NULL,"open",items[i].path,strlen(items[i].parameter)?items[i].parameter:NULL,NULL,SW_SHOW);
 			Sleep(200);
 			do{
 				EnumWindows(GetHwndProc,(LPARAM)&items[i]);
+				if(timeout>=500){
+					i--;
+					break;
+				}
+				timeout++;
 			}while(!items[i].hWnd);
 		}
 		for(i=0;i<slot.itemCount;i++){
