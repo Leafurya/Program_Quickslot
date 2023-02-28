@@ -6,6 +6,7 @@
 #include <psapi.h>
 
 #include "list.h"
+#include "progressbar.h"
 
 QuickSlot *originSlotAdr;
 List list;
@@ -171,6 +172,9 @@ BOOL CALLBACK SavePreWindows(HWND hWnd,LPARAM lParam){
 	CloseHandle(hProc);
 	return TRUE;
 }
+	void StopSpread(char blockVar){
+		
+	}
 char SpreadQuickslot(QuickSlot *pOriginSlot,int slotIndex){
 	int i,j;
 	//SHELLEXECUTEINFOA info[ITEM_MAXSIZE]={0,};
@@ -181,10 +185,12 @@ char SpreadQuickslot(QuickSlot *pOriginSlot,int slotIndex){
 	
 	originSlotAdr=pOriginSlot;
 	int timeout=0;
+	char blockVar=0;
 	
 	
 	//ZeroMemory(info,sizeof(info));
 	if(slot.itemCount!=0){
+		SetBlockVar(&blockVar);
 		InitList(&list);
 		EnumWindows(SavePreWindows,(LPARAM)&list);
 //		while(MoveNext(&list)){
@@ -193,12 +199,20 @@ char SpreadQuickslot(QuickSlot *pOriginSlot,int slotIndex){
 //		ReturnToHead(&list);
 //		printf("\n");
 		for(i=0;i<slot.itemCount;i++){
+			while(blockVar){
+				if(blockVar==-1){
+					for(i=0;i<slot.itemCount;i++){
+						DestroyWindow(items[i].hWnd);
+					}
+					FreeList(&list);
+					return -1;
+				}
+			}
+			StopSpread(*blockVar);
 			if(items[i].hWnd){
 				items[i].hWnd=0;
 			}
 			timeout=0;
-			//ShellExecute(NULL,"open",items[i].path,strlen(items[i].parameter)?items[i].parameter:NULL,NULL,SW_SHOW);
-			//printf("%s ShellExecute: %d\n",items[i].path,ShellExecute(NULL,"open",items[i].path,strlen(items[i].parameter)?items[i].parameter:NULL,NULL,SW_SHOW));
 			if(ShellExecute(NULL,"open",items[i].path,strlen(items[i].parameter)?items[i].parameter:NULL,NULL,SW_SHOW)<=(HINSTANCE)32){
 				printf("cant open\n");
 			}
@@ -213,8 +227,14 @@ char SpreadQuickslot(QuickSlot *pOriginSlot,int slotIndex){
 				}
 				timeout++;
 			}while(!items[i].hWnd);
+			StepBar();
 		}
 		for(i=0;i<slot.itemCount;i++){
+			while(blockVar){
+				if(blockVar==-1){
+					return -1;
+				}
+			}
 			//printf("%d%s\n",items[i].hWnd,items[i].path);
 			if(items[i].hWnd){
 				MoveWindow(items[i].hWnd,items[i].xpos,items[i].ypos<0?100:items[i].ypos,items[i].w,items[i].h,TRUE);
@@ -224,6 +244,7 @@ char SpreadQuickslot(QuickSlot *pOriginSlot,int slotIndex){
 				//SetForegroundWindow(items[i].hWnd);
 				Sleep(100);
 			}
+			StepBar();
 		}
 		memcpy(pOriginSlot[slotIndex].item,items,sizeof(pOriginSlot[slotIndex].item));
 		FreeList(&list);
