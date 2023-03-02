@@ -202,6 +202,7 @@ void InitWindow(HWND hWnd){
 	
 	oldListProc=(WNDPROC)SetWindowLongPtr(sc.liItems,GWLP_WNDPROC,(LONG_PTR)ListProc);
 	ShowSlotData(quickslot);
+	
 }
 void TimerFunc(HWND hWnd){
 	int index;
@@ -218,6 +219,7 @@ void TimerFunc(HWND hWnd){
 				return;
 			}
 		}
+		SetNowIndex(index);
 		StartThread(SpreadThreadFunc,(int *)&index);
 		DialogBox(g_hInst,MAKEINTRESOURCE(DLG_PROGRESS),mainWnd,(DLGPROC)ProgressDlgProc);
 	}
@@ -514,8 +516,8 @@ unsigned __stdcall SpreadThreadFunc(void *args){
 	int i;
 	char trayMessage[32]={0};
 	int index=*((int *)args);
-	HWND *hDlg;
-	hDlg=GetDlgHandleAdr();
+//	HWND *hDlg;
+//	hDlg=GetDlgHandleAdr();
 //	for(i=0;i<quickslot[index].itemCount;i++){
 //		if(quickslot[index].item[i].hWnd){
 //			CloseSlot(&quickslot[index]);
@@ -524,18 +526,26 @@ unsigned __stdcall SpreadThreadFunc(void *args){
 //			return 1;
 //		}
 //	}
-	while(!(*hDlg));
+//	while(!(*hDlg)){
+//		printf("hDlg: %d\n",*hDlg);
+//	}
 	switch(SpreadQuickslot(quickslot,index)){
 		case -1:
 			CloseSlot(&quickslot[index]);
-		case 1:
-			EndDialog(*hDlg,1);
+			ExitDialog(); 
 			return 1;
+		case 1:
+			ExitDialog();
+			return 1;
+		default:
+			break;
 	}
 	sprintf(trayMessage,"\"%s\" 슬롯을 열었습니다.",quickslot[index].slotName);
 	//ShowSlotData(quickslot);
-	CreateNotification(mainWnd,trayName,trayMessage);
-	ChangeTrayTitle(quickslot[index].slotName);
-	EndDialog(*hDlg,1);
+//	CreateNotification(mainWnd,trayName,trayMessage);
+//	ChangeTrayTitle(quickslot[index].slotName);
+	//printf("sendMessage result: %d\n",SendMessage(*hDlg,DM_EXIT,0,0));
+	//EndDialog(*hDlg,1);
+	ExitDialog();
 	return 1;
 }

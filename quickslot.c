@@ -174,10 +174,10 @@ BOOL CALLBACK SavePreWindows(HWND hWnd,LPARAM lParam){
 	CloseHandle(hProc);
 	return TRUE;
 }
-	char StopSpread(char blockVar,List *list){
+	char StopSpread(char *blockVar,List *list){
 		int i;
-		while(blockVar){
-			if(blockVar==-1){
+		while(*blockVar){
+			if(*blockVar==-1){
 				FreeList(list);
 				return 1;
 			}
@@ -195,6 +195,8 @@ char SpreadQuickslot(QuickSlot *pOriginSlot,int slotIndex){
 	originSlotAdr=pOriginSlot;
 	int timeout=0;
 	static char blockVar=0; //controled by progressbar proc
+	DWORD threadId;
+	DWORD curThreadId;
 	
 	
 	//ZeroMemory(info,sizeof(info));
@@ -218,7 +220,8 @@ char SpreadQuickslot(QuickSlot *pOriginSlot,int slotIndex){
 //				}
 //			}
 //			StopSpread(*blockVar);
-			if(StopSpread(blockVar,&list)){
+			printf("find %s %s\n",slot.item[i].path,slot.item[i].parameter);
+			if(StopSpread(&blockVar,&list)){
 				return -1;
 			}
 			if(items[i].hWnd){
@@ -230,32 +233,48 @@ char SpreadQuickslot(QuickSlot *pOriginSlot,int slotIndex){
 			}
 			Sleep(200);
 			do{
+				if(StopSpread(&blockVar,&list)){
+					return -1;
+				}
 				EnumWindows(GetHwndProc,(LPARAM)&items[i]);
 				//printf("%d ",timeout);
-				if(timeout>=15000){
+				if(timeout>=10000){
 					//printf("cant find %s\n",items[i].path);
 					items[i].hWnd=0;
 					break;
 				}
 				timeout++;
+				//Sleep(1);
 			}while(!items[i].hWnd);
 			StepBar();
 		}
+		
 		for(i=0;i<slot.itemCount;i++){
-			if(StopSpread(blockVar,&list)){
+			printf("move %d %s %s\n",items[i].hWnd,slot.item[i].path,slot.item[i].parameter);
+			if(StopSpread(&blockVar,&list)){
 				return -1;
 			}
 			//printf("%d%s\n",items[i].hWnd,items[i].path);
 			if(items[i].hWnd){
 				MoveWindow(items[i].hWnd,items[i].xpos,items[i].ypos<0?100:items[i].ypos,items[i].w,items[i].h,TRUE);
+				ShowWindow(items[i].hWnd,SW_NORMAL);
 				if(items[i].maximized){
 					ShowWindow(items[i].hWnd,SW_SHOWMAXIMIZED);
 				}
 				//SetForegroundWindow(items[i].hWnd);
+				threadId=GetWindowThreadProcessId(items[i].hWnd,NULL);
+				curThreadId=GetCurrentThreadId();
+				if(threadId!=curThreadId){
+					if(AttachThreadInput(curThreadId,threadId,TRUE)){
+						BringWindowToTop(items[i].hWnd);
+						AttachThreadInput(curThreadId,threadId,FALSE);
+					}
+				}
 				Sleep(100);
 			}
 			StepBar();
 		}
+		printf("end\n");
 		memcpy(pOriginSlot[slotIndex].item,items,sizeof(pOriginSlot[slotIndex].item));
 		FreeList(&list);
 		return 0;

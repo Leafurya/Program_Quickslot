@@ -8,5 +8,7 @@ BOOL CALLBACK ProgressDlgProc(HWND,UINT,WPARAM,LPARAM);
 void StepBar();
 void SetBlockVar(char *);
 HWND *GetDlgHandleAdr();
+void SetNowIndex(int);
+void CALLBACK ExitDialog();
 
 #endif
