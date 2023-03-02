@@ -130,17 +130,19 @@ BOOL CALLBACK GetHwndProc(HWND hWnd,LPARAM lParam){
 			printf("ComparePreWindows: %s\n",data);
 			//free(data);
 			sprintf(path,"\"%s\"",tpath);
-			//printf("%s\n%s\n\n",path,data);
-			if(IsNotHWNDInSlot(hWnd)){
-				target->hWnd=hWnd;
-				//printf("path: %s\t%d\n\n",target->path,target->hWnd);
-				CloseHandle(hProc);
-				if(IsZoomed(hWnd)){
-					ShowWindow(hWnd,SW_SHOWNORMAL);
-				}
-				
-				return FALSE;
+			if(!strcmp(path,target->path)){
+				if(IsNotHWNDInSlot(hWnd)){
+					target->hWnd=hWnd;
+					//printf("path: %s\t%d\n\n",target->path,target->hWnd);
+					CloseHandle(hProc);
+					if(IsZoomed(hWnd)){
+						ShowWindow(hWnd,SW_SHOWNORMAL);
+					}
+					
+					return FALSE;
+				}	
 			}
+			//printf("%s\n%s\n\n",path,data);
 		}
 		//printf("path: %s\t%d\n\n",target->path,target->hWnd);
 		ZeroMemory(path,sizeof(path));
@@ -172,8 +174,15 @@ BOOL CALLBACK SavePreWindows(HWND hWnd,LPARAM lParam){
 	CloseHandle(hProc);
 	return TRUE;
 }
-	void StopSpread(char blockVar){
-		
+	char StopSpread(char blockVar,List *list){
+		int i;
+		while(blockVar){
+			if(blockVar==-1){
+				FreeList(list);
+				return 1;
+			}
+		}
+		return 0;
 	}
 char SpreadQuickslot(QuickSlot *pOriginSlot,int slotIndex){
 	int i,j;
@@ -185,7 +194,7 @@ char SpreadQuickslot(QuickSlot *pOriginSlot,int slotIndex){
 	
 	originSlotAdr=pOriginSlot;
 	int timeout=0;
-	char blockVar=0;
+	static char blockVar=0; //controled by progressbar proc
 	
 	
 	//ZeroMemory(info,sizeof(info));
@@ -199,16 +208,19 @@ char SpreadQuickslot(QuickSlot *pOriginSlot,int slotIndex){
 //		ReturnToHead(&list);
 //		printf("\n");
 		for(i=0;i<slot.itemCount;i++){
-			while(blockVar){
-				if(blockVar==-1){
-					for(i=0;i<slot.itemCount;i++){
-						DestroyWindow(items[i].hWnd);
-					}
-					FreeList(&list);
-					return -1;
-				}
+//			while(blockVar){
+//				if(blockVar==-1){
+//					for(i=0;i<slot.itemCount;i++){
+//						DestroyWindow(items[i].hWnd);
+//					}
+//					FreeList(&list);
+//					return -1;
+//				}
+//			}
+//			StopSpread(*blockVar);
+			if(StopSpread(blockVar,&list)){
+				return -1;
 			}
-			StopSpread(*blockVar);
 			if(items[i].hWnd){
 				items[i].hWnd=0;
 			}
@@ -230,10 +242,8 @@ char SpreadQuickslot(QuickSlot *pOriginSlot,int slotIndex){
 			StepBar();
 		}
 		for(i=0;i<slot.itemCount;i++){
-			while(blockVar){
-				if(blockVar==-1){
-					return -1;
-				}
+			if(StopSpread(blockVar,&list)){
+				return -1;
 			}
 			//printf("%d%s\n",items[i].hWnd,items[i].path);
 			if(items[i].hWnd){

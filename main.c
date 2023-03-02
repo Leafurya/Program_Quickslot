@@ -13,6 +13,7 @@
 #include "resource.h"
 #include "trayicon.h"
 #include "progressbar.h"
+#include "thread.h"
 
 #define TIMER_INPUT	0
 #define WM_FINDWINDOW	WM_USER+4
@@ -29,7 +30,7 @@ void TimerFunc(HWND);
 void SaveCtrlsCommandFunc(WPARAM,LPARAM);
 void ShowSaveButton(char);
 
-unsigned __stdcall *SpreadThreadFunc(void *);
+unsigned __stdcall SpreadThreadFunc(void *);
 
 HWND mainWnd;
 RECT mainRect;
@@ -204,9 +205,19 @@ void InitWindow(HWND hWnd){
 }
 void TimerFunc(HWND hWnd){
 	int index;
+	int i;
+	char trayMessage[32]={0};
 	
 	if((index=GetSlotIndex())!=-1){
 		//DialogBox(g_hInst,MAKEINTRESOURCE(IDD_DIALOG1),mainWnd,(DLGPROC)ModiDlgProc)==ID_BT_CANCLE){
+		for(i=0;i<quickslot[index].itemCount;i++){
+			if(quickslot[index].item[i].hWnd){
+				CloseSlot(&quickslot[index]);
+				sprintf(trayMessage,"\"%s\" ½½·ÔÀ» ´Ý¾Ò½À´Ï´Ù.",quickslot[index].slotName);
+				CreateNotification(mainWnd,trayName,trayMessage);
+				return;
+			}
+		}
 		StartThread(SpreadThreadFunc,(int *)&index);
 		DialogBox(g_hInst,MAKEINTRESOURCE(DLG_PROGRESS),mainWnd,(DLGPROC)ProgressDlgProc);
 	}
@@ -498,25 +509,33 @@ LRESULT CALLBACK ListProc(HWND hWnd,UINT iMessage,WPARAM wParam,LPARAM lParam){
 	}
 	return CallWindowProc(oldListProc,hWnd,iMessage,wParam,lParam);
 }
-unsigned __stdcall *SpreadThreadFunc(void *args){
+unsigned __stdcall SpreadThreadFunc(void *args){
 	//DialogBox(g_hInst,MAKEINTRESOURCE(DLG_PROGRESS),mainWnd,(DLGPROC)ProgressDlgProc);
 	int i;
 	char trayMessage[32]={0};
-	int index=((int *)args);
-	
-	for(i=0;i<quickslot[index].itemCount;i++){
-		if(quickslot[index].item[i].hWnd){
+	int index=*((int *)args);
+	HWND *hDlg;
+	hDlg=GetDlgHandleAdr();
+//	for(i=0;i<quickslot[index].itemCount;i++){
+//		if(quickslot[index].item[i].hWnd){
+//			CloseSlot(&quickslot[index]);
+//			sprintf(trayMessage,"\"%s\" ½½·ÔÀ» ´Ý¾Ò½À´Ï´Ù.",quickslot[index].slotName);
+//			CreateNotification(mainWnd,trayName,trayMessage);
+//			return 1;
+//		}
+//	}
+	while(!(*hDlg));
+	switch(SpreadQuickslot(quickslot,index)){
+		case -1:
 			CloseSlot(&quickslot[index]);
-			sprintf(trayMessage,"\"%s\" ½½·ÔÀ» ´Ý¾Ò½À´Ï´Ù.",quickslot[index].slotName);
-			CreateNotification(hWnd,trayName,trayMessage);
-			return;
-		}
-	}
-	if(SpreadQuickslot(quickslot,index)){
-		return;
+		case 1:
+			EndDialog(*hDlg,1);
+			return 1;
 	}
 	sprintf(trayMessage,"\"%s\" ½½·ÔÀ» ¿­¾ú½À´Ï´Ù.",quickslot[index].slotName);
 	//ShowSlotData(quickslot);
-	CreateNotification(hWnd,trayName,trayMessage);
+	CreateNotification(mainWnd,trayName,trayMessage);
 	ChangeTrayTitle(quickslot[index].slotName);
+	EndDialog(*hDlg,1);
+	return 1;
 }
