@@ -6,6 +6,7 @@
 #include <psapi.h>
 
 #include "list.h"
+#include "progressbar.h"
 
 QuickSlot *originSlotAdr;
 List list;
@@ -92,10 +93,10 @@ char SaveQuickslot(QuickSlot *pQuickslot,int size){
 	}
 	BOOL ComparePreWindows(char *str,List *list){
 		char *data; 
+		//printf("GetCurStr : %s\n\n",str);
 		while(MoveNext(list)){
 			data=(char *)GetCurData(*list);
 			//printf("GetCurData: %s\n",data);
-			//printf("GetCurStr : %s\n\n",str);
 			if(!strcmp(str,data)){
 				free(str);
 				ReturnToHead(list);
@@ -103,6 +104,7 @@ char SaveQuickslot(QuickSlot *pQuickslot,int size){
 			}
 		}
 		AddData(list,str);
+		
 		ReturnToHead(list);
 		return 1;
 	}
@@ -125,16 +127,22 @@ BOOL CALLBACK GetHwndProc(HWND hWnd,LPARAM lParam){
 		GetModuleFileNameEx(hProc,NULL,tpath,1024);
 		data=GetString("%d\"%s\"\0",hWnd,tpath);
 		if(ComparePreWindows(data,&list)){
+			printf("ComparePreWindows: %s\n",data);
+			//free(data);
 			sprintf(path,"\"%s\"",tpath);
 			if(!strcmp(path,target->path)){
-				target->hWnd=hWnd;
-				//printf("path: %s\t%d\n\n",target->path,target->hWnd);
-				CloseHandle(hProc);
-				if(IsZoomed(hWnd)){
-					ShowWindow(hWnd,SW_SHOWNORMAL);
-				}
-				return FALSE;
+				if(IsNotHWNDInSlot(hWnd)){
+					target->hWnd=hWnd;
+					//printf("path: %s\t%d\n\n",target->path,target->hWnd);
+					CloseHandle(hProc);
+					if(IsZoomed(hWnd)){
+						ShowWindow(hWnd,SW_SHOWNORMAL);
+					}
+					
+					return FALSE;
+				}	
 			}
+			//printf("%s\n%s\n\n",path,data);
 		}
 		//printf("path: %s\t%d\n\n",target->path,target->hWnd);
 		ZeroMemory(path,sizeof(path));
@@ -166,8 +174,18 @@ BOOL CALLBACK SavePreWindows(HWND hWnd,LPARAM lParam){
 	CloseHandle(hProc);
 	return TRUE;
 }
+	char StopSpread(char *blockVar,List *list){
+		int i;
+		while(*blockVar){
+			if(*blockVar==-1){
+				FreeList(list);
+				return 1;
+			}
+		}
+		return 0;
+	}
 char SpreadQuickslot(QuickSlot *pOriginSlot,int slotIndex){
-	int i;
+	int i,j;
 	//SHELLEXECUTEINFOA info[ITEM_MAXSIZE]={0,};
 	RECT rect;
 	char cmd[2048]={0};
@@ -175,10 +193,15 @@ char SpreadQuickslot(QuickSlot *pOriginSlot,int slotIndex){
 	Item *items=pOriginSlot[slotIndex].item;
 	
 	originSlotAdr=pOriginSlot;
+	int timeout=0;
+	static char blockVar=0; //controled by progressbar proc
+	DWORD threadId;
+	DWORD curThreadId;
 	
 	
 	//ZeroMemory(info,sizeof(info));
 	if(slot.itemCount!=0){
+		SetBlockVar(&blockVar);
 		InitList(&list);
 		EnumWindows(SavePreWindows,(LPARAM)&list);
 //		while(MoveNext(&list)){
@@ -187,24 +210,71 @@ char SpreadQuickslot(QuickSlot *pOriginSlot,int slotIndex){
 //		ReturnToHead(&list);
 //		printf("\n");
 		for(i=0;i<slot.itemCount;i++){
+//			while(blockVar){
+//				if(blockVar==-1){
+//					for(i=0;i<slot.itemCount;i++){
+//						DestroyWindow(items[i].hWnd);
+//					}
+//					FreeList(&list);
+//					return -1;
+//				}
+//			}
+//			StopSpread(*blockVar);
+			printf("find %s %s\n",slot.item[i].path,slot.item[i].parameter);
+			if(StopSpread(&blockVar,&list)){
+				return -1;
+			}
 			if(items[i].hWnd){
-				CloseHandle(items[i].hWnd);
 				items[i].hWnd=0;
 			}
-			ShellExecute(NULL,"open",items[i].path,strlen(items[i].parameter)?items[i].parameter:NULL,NULL,SW_SHOW);
+			timeout=0;
+			if(ShellExecute(NULL,"open",items[i].path,strlen(items[i].parameter)?items[i].parameter:NULL,NULL,SW_SHOW)<=(HINSTANCE)32){
+				printf("cant open\n");
+			}
 			Sleep(200);
 			do{
+				if(StopSpread(&blockVar,&list)){
+					return -1;
+				}
 				EnumWindows(GetHwndProc,(LPARAM)&items[i]);
+				//printf("%d ",timeout);
+				if(timeout>=10000){
+					//printf("cant find %s\n",items[i].path);
+					items[i].hWnd=0;
+					break;
+				}
+				timeout++;
+				//Sleep(1);
 			}while(!items[i].hWnd);
+			StepBar();
 		}
+		
 		for(i=0;i<slot.itemCount;i++){
-			MoveWindow(items[i].hWnd,items[i].xpos,items[i].ypos<0?100:items[i].ypos,items[i].w,items[i].h,TRUE);
-			if(items[i].maximized){
-				ShowWindow(items[i].hWnd,SW_SHOWMAXIMIZED);
+			printf("move %d %s %s\n",items[i].hWnd,slot.item[i].path,slot.item[i].parameter);
+			if(StopSpread(&blockVar,&list)){
+				return -1;
 			}
-			//SetForegroundWindow(items[i].hWnd);
-			Sleep(100);
+			//printf("%d%s\n",items[i].hWnd,items[i].path);
+			if(items[i].hWnd){
+				MoveWindow(items[i].hWnd,items[i].xpos,items[i].ypos<0?100:items[i].ypos,items[i].w,items[i].h,TRUE);
+				ShowWindow(items[i].hWnd,SW_NORMAL);
+				if(items[i].maximized){
+					ShowWindow(items[i].hWnd,SW_SHOWMAXIMIZED);
+				}
+				//SetForegroundWindow(items[i].hWnd);
+				threadId=GetWindowThreadProcessId(items[i].hWnd,NULL);
+				curThreadId=GetCurrentThreadId();
+				if(threadId!=curThreadId){
+					if(AttachThreadInput(curThreadId,threadId,TRUE)){
+						BringWindowToTop(items[i].hWnd);
+						AttachThreadInput(curThreadId,threadId,FALSE);
+					}
+				}
+				Sleep(100);
+			}
+			StepBar();
 		}
+		printf("end\n");
 		memcpy(pOriginSlot[slotIndex].item,items,sizeof(pOriginSlot[slotIndex].item));
 		FreeList(&list);
 		return 0;

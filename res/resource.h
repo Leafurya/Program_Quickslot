@@ -16,3 +16,7 @@
 
 #define IDI_PROGRAMICON                         101
 #define IDI_PROGRAMICON64                       102
+
+#define DLG_PROGRESS                            300
+#define DLG_PB_BAR                              60000
+#define DLG_PB_CANCEL                           60001

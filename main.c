@@ -12,6 +12,8 @@
 #include "ctrls.h"
 #include "resource.h"
 #include "trayicon.h"
+#include "progressbar.h"
+#include "thread.h"
 
 #define TIMER_INPUT	0
 #define WM_FINDWINDOW	WM_USER+4
@@ -21,11 +23,14 @@ LRESULT CALLBACK ListProc(HWND,UINT,WPARAM,LPARAM);
 BOOL CALLBACK EnumWindowsProc(HWND,LPARAM);
 BOOL CALLBACK ModiDlgProc(HWND,UINT,WPARAM,LPARAM);
 BOOL CALLBACK NameDlgProc(HWND,UINT,WPARAM,LPARAM);
+BOOL CALLBACK ProgressDlgProc(HWND,UINT,WPARAM,LPARAM);
 
 void InitWindow(HWND);
 void TimerFunc(HWND);
 void SaveCtrlsCommandFunc(WPARAM,LPARAM);
 void ShowSaveButton(char);
+
+unsigned __stdcall SpreadThreadFunc(void *);
 
 HWND mainWnd;
 RECT mainRect;
@@ -67,10 +72,10 @@ int APIENTRY WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance
 	WndClass.style=CS_HREDRAW | CS_VREDRAW;
 	RegisterClass(&WndClass);
 
-	AllocConsole(); 
-	freopen("COIN$", "r", stdin);
-	freopen("CONOUT$", "w", stdout);
-	freopen("CONOUT$", "w", stderr); 
+//	AllocConsole(); 
+//	freopen("COIN$", "r", stdin);
+//	freopen("CONOUT$", "w", stdout);
+//	freopen("CONOUT$", "w", stderr); 
 	
 	if(!opendir("./data")){
 		mkdir("./data");
@@ -92,7 +97,7 @@ int APIENTRY WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance
 		DispatchMessage(&Message);
 	}
 
-	FreeConsole();
+//	FreeConsole();
 
 	return Message.wParam;
 }
@@ -197,6 +202,7 @@ void InitWindow(HWND hWnd){
 	
 	oldListProc=(WNDPROC)SetWindowLongPtr(sc.liItems,GWLP_WNDPROC,(LONG_PTR)ListProc);
 	ShowSlotData(quickslot);
+	
 }
 void TimerFunc(HWND hWnd){
 	int index;
@@ -204,21 +210,18 @@ void TimerFunc(HWND hWnd){
 	char trayMessage[32]={0};
 	
 	if((index=GetSlotIndex())!=-1){
+		//DialogBox(g_hInst,MAKEINTRESOURCE(IDD_DIALOG1),mainWnd,(DLGPROC)ModiDlgProc)==ID_BT_CANCLE){
 		for(i=0;i<quickslot[index].itemCount;i++){
 			if(quickslot[index].item[i].hWnd){
 				CloseSlot(&quickslot[index]);
 				sprintf(trayMessage,"\"%s\" ½½·ÔÀ» ´Ý¾Ò½À´Ï´Ù.",quickslot[index].slotName);
-				CreateNotification(hWnd,trayName,trayMessage);
+				CreateNotification(mainWnd,trayName,trayMessage);
 				return;
 			}
 		}
-		if(SpreadQuickslot(quickslot,index)){
-			return;
-		}
-		sprintf(trayMessage,"\"%s\" ½½·ÔÀ» ¿­¾ú½À´Ï´Ù.",quickslot[index].slotName);
-		ShowSlotData(quickslot);
-		CreateNotification(hWnd,trayName,trayMessage);
-		ChangeTrayTitle(quickslot[index].slotName);
+		SetNowIndex(index);
+		StartThread(SpreadThreadFunc,(int *)&index);
+		DialogBox(g_hInst,MAKEINTRESOURCE(DLG_PROGRESS),mainWnd,(DLGPROC)ProgressDlgProc);
 	}
 }
 
@@ -479,41 +482,9 @@ LRESULT CALLBACK ListProc(HWND hWnd,UINT iMessage,WPARAM wParam,LPARAM lParam){
 					break;
 				case VK_UP:
 					SwitchItemPosition(hWnd,-1);
-//					selCount=SendMessage(hWnd,LB_GETSELCOUNT,0,0);
-//					if(selCount!=1){
-//						break;
-//					}
-//					index=SendMessage(hWnd,LB_GETCURSEL,0,0);
-//					if(index==0){
-//						break;
-//					}
-//					tItem=quickslot[nowSlotIndex].item[index];
-//					quickslot[nowSlotIndex].item[index]=quickslot[nowSlotIndex].item[index-1];
-//					quickslot[nowSlotIndex].item[index-1]=tItem;
-//					ShowItemList(quickslot[nowSlotIndex],sc.liItems);
-//					SendMessage(hWnd,LB_SETSEL,TRUE,index-1);
-//					if(!saving){
-//						SaveQuickslot(quickslot,sizeof(quickslot));
-//					}
 					break;
 				case VK_DOWN:
 					SwitchItemPosition(hWnd,1);
-//					selCount=SendMessage(hWnd,LB_GETSELCOUNT,0,0);
-//					if(selCount!=1){
-//						break;
-//					}
-//					index=SendMessage(hWnd,LB_GETCURSEL,0,0);
-//					if(index>=quickslot[nowSlotIndex].itemCount){
-//						break;
-//					}
-//					tItem=quickslot[nowSlotIndex].item[index];
-//					quickslot[nowSlotIndex].item[index]=quickslot[nowSlotIndex].item[index+1];
-//					quickslot[nowSlotIndex].item[index+1]=tItem;
-//					ShowItemList(quickslot[nowSlotIndex],sc.liItems);
-//					SendMessage(hWnd,LB_SETSEL,TRUE,index+1);
-//					if(!saving){
-//						SaveQuickslot(quickslot,sizeof(quickslot));
-//					}
 					break;
 			}
 			return 0;
@@ -539,4 +510,42 @@ LRESULT CALLBACK ListProc(HWND hWnd,UINT iMessage,WPARAM wParam,LPARAM lParam){
 			break;
 	}
 	return CallWindowProc(oldListProc,hWnd,iMessage,wParam,lParam);
+}
+unsigned __stdcall SpreadThreadFunc(void *args){
+	//DialogBox(g_hInst,MAKEINTRESOURCE(DLG_PROGRESS),mainWnd,(DLGPROC)ProgressDlgProc);
+	int i;
+	char trayMessage[32]={0};
+	int index=*((int *)args);
+//	HWND *hDlg;
+//	hDlg=GetDlgHandleAdr();
+//	for(i=0;i<quickslot[index].itemCount;i++){
+//		if(quickslot[index].item[i].hWnd){
+//			CloseSlot(&quickslot[index]);
+//			sprintf(trayMessage,"\"%s\" ½½·ÔÀ» ´Ý¾Ò½À´Ï´Ù.",quickslot[index].slotName);
+//			CreateNotification(mainWnd,trayName,trayMessage);
+//			return 1;
+//		}
+//	}
+//	while(!(*hDlg)){
+//		printf("hDlg: %d\n",*hDlg);
+//	}
+	switch(SpreadQuickslot(quickslot,index)){
+		case -1:
+			CloseSlot(&quickslot[index]);
+			ExitDialog(); 
+			return 1;
+		case 1:
+			ExitDialog();
+			return 1;
+		default:
+			break;
+	}
+	sprintf(trayMessage,"\"%s\" ½½·ÔÀ» ¿­¾ú½À´Ï´Ù.",quickslot[index].slotName);
+	//ShowSlotData(quickslot);
+//	CreateNotification(mainWnd,trayName,trayMessage);
+//	ChangeTrayTitle(quickslot[index].slotName);
+	//printf("sendMessage result: %d\n",SendMessage(*hDlg,DM_EXIT,0,0));
+	//EndDialog(*hDlg,1);
+	ExitDialog();
+	return 1;
 }
