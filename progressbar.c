@@ -19,6 +19,7 @@ BOOL CALLBACK ProgressDlgProc(HWND hDlg,UINT iMessage,WPARAM wParam,LPARAM lPara
 			
 			hProgressBar=GetDlgItem(hDlg,DLG_PB_BAR);
 			SendMessage(hProgressBar,PBM_SETRANGE,0,MAKELPARAM(0,quickslot[_nowIndex].itemCount*2));
+			//SetWindowLongPtr(hDlg,GWL_EXSTYLE,)
 			break;
 		case WM_COMMAND:
 			switch(wParam){
