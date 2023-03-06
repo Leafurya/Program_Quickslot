@@ -1,4 +1,5 @@
 #include "trayicon.h"
+#include <stdio.h> 
 
 NOTIFYICONDATA trayicon;
 
@@ -31,13 +32,25 @@ void CreateNotification(HWND hWnd,char *title,char *content){
 void DeleteTrayIcon(){
 	Shell_NotifyIcon(NIM_DELETE,&trayicon);
 }
-void TrayCommandFunc(HWND hWnd,LPARAM lParam){
+void TrayCommandFunc(HWND hWnd,LPARAM lParam,QuickSlot *slot,int maxSlotSize){
 	HMENU trayMenu;
+	HMENU openedSlotList;
 	POINT mousePos;
+	int i,j;
+	char menuStr[126]={0};
 	
 	switch(LOWORD(lParam)){
 		case WM_RBUTTONUP:
+			openedSlotList=CreatePopupMenu();
+			
 			trayMenu=CreatePopupMenu();
+			for(i=0;i<maxSlotSize;i++){
+				if(IsSlotOpened(slot[i])){
+					sprintf(menuStr,"%s 닫기",slot[i].slotName);
+					AppendMenu(trayMenu,MF_STRING,(UINT_PTR)(MAKEWPARAM(WM_CLOSE_SLOT,i)),menuStr);
+				}
+			}
+			AppendMenu(trayMenu,MF_SEPARATOR,0,0);
 			AppendMenu(trayMenu,MF_STRING,WM_OPEN_PROGRAM,"열기");
 			AppendMenu(trayMenu,MF_STRING,WM_EXIT_PROGRAM,"종료");
 			SetForegroundWindow(hWnd);

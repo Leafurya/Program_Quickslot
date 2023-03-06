@@ -17,5 +17,7 @@ char MoveNext(List *);
 void *GetCurData(List);
 void FreeList(List *);
 void ReturnToHead(List *);
+void RemoveData(List *,int);
+char FindData(List *,void *,char (*)(void *,void *));
 
 #endif

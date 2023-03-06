@@ -72,10 +72,10 @@ int APIENTRY WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance
 	WndClass.style=CS_HREDRAW | CS_VREDRAW;
 	RegisterClass(&WndClass);
 
-//	AllocConsole(); 
-//	freopen("COIN$", "r", stdin);
-//	freopen("CONOUT$", "w", stdout);
-//	freopen("CONOUT$", "w", stderr); 
+	AllocConsole(); 
+	freopen("COIN$", "r", stdin);
+	freopen("CONOUT$", "w", stdout);
+	freopen("CONOUT$", "w", stderr); 
 	
 	if(!opendir("./data")){
 		mkdir("./data");
@@ -97,7 +97,7 @@ int APIENTRY WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance
 		DispatchMessage(&Message);
 	}
 
-//	FreeConsole();
+	FreeConsole();
 
 	return Message.wParam;
 }
@@ -144,7 +144,7 @@ LRESULT CALLBACK MainWndProc(HWND hWnd,UINT iMessage,WPARAM wParam,LPARAM lParam
 			}
 			return 0;
 		case WM_TRAY_MSG:
-			TrayCommandFunc(hWnd,lParam);
+			TrayCommandFunc(hWnd,lParam,quickslot,KEYCOUNT);
 			return 0;
 		case WM_COMMAND:
 			switch((int)(LOWORD(wParam)/100)){
@@ -152,13 +152,16 @@ LRESULT CALLBACK MainWndProc(HWND hWnd,UINT iMessage,WPARAM wParam,LPARAM lParam
 					SaveCtrlsCommandFunc(wParam,lParam);
 					break;
 				default:
-					switch(wParam){
+					switch(LOWORD(wParam)){
 						case WM_EXIT_PROGRAM:
 							DestroyWindow(hWnd);
 							break;
 						case WM_OPEN_PROGRAM:
 							ShowWindow(hWnd,SW_SHOW);
 							SetForegroundWindow(hWnd);
+							break;
+						case WM_CLOSE_SLOT:
+							CloseSlot(&quickslot[HIWORD(wParam)]);
 							break;
 					}
 					break;
@@ -202,8 +205,10 @@ void InitWindow(HWND hWnd){
 	
 	oldListProc=(WNDPROC)SetWindowLongPtr(sc.liItems,GWLP_WNDPROC,(LONG_PTR)ListProc);
 	ShowSlotData(quickslot);
-	
 }
+	char SlotNameCompare(void *data1,void *data2){
+		return !strcmp((char *)data1,(char *)data2);
+	}
 void TimerFunc(HWND hWnd){
 	int index;
 	int i;
@@ -211,13 +216,17 @@ void TimerFunc(HWND hWnd){
 	
 	if((index=GetSlotIndex())!=-1){
 		//DialogBox(g_hInst,MAKEINTRESOURCE(IDD_DIALOG1),mainWnd,(DLGPROC)ModiDlgProc)==ID_BT_CANCLE){
-		for(i=0;i<quickslot[index].itemCount;i++){
-			if(quickslot[index].item[i].hWnd){
-				CloseSlot(&quickslot[index]);
-				sprintf(trayMessage,"\"%s\" ½½·ÔÀ» ´Ý¾Ò½À´Ï´Ù.",quickslot[index].slotName);
-				CreateNotification(mainWnd,trayName,trayMessage);
-				return;
-			}
+//		for(i=0;i<quickslot[index].itemCount;i++){
+//			if(quickslot[index].item[i].hWnd){
+//				CloseSlot(&quickslot[index]);
+//				sprintf(trayMessage,"\"%s\" ½½·ÔÀ» ´Ý¾Ò½À´Ï´Ù.",quickslot[index].slotName);
+//				CreateNotification(mainWnd,trayName,trayMessage);
+//				return;
+//			}
+//		}
+		if(IsSlotOpened(quickslot[index])){
+			ForegroundSlot(quickslot[index]);
+			return;
 		}
 		SetNowIndex(index);
 		StartThread(SpreadThreadFunc,(int *)&index);

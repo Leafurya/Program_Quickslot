@@ -262,14 +262,14 @@ char SpreadQuickslot(QuickSlot *pOriginSlot,int slotIndex){
 					ShowWindow(items[i].hWnd,SW_SHOWMAXIMIZED);
 				}
 				//SetForegroundWindow(items[i].hWnd);
-				threadId=GetWindowThreadProcessId(items[i].hWnd,NULL);
-				curThreadId=GetCurrentThreadId();
-				if(threadId!=curThreadId){
-					if(AttachThreadInput(curThreadId,threadId,TRUE)){
-						BringWindowToTop(items[i].hWnd);
-						AttachThreadInput(curThreadId,threadId,FALSE);
-					}
-				}
+//				threadId=GetWindowThreadProcessId(items[i].hWnd,NULL);
+//				curThreadId=GetCurrentThreadId();
+//				if(threadId!=curThreadId){
+//					if(AttachThreadInput(curThreadId,threadId,TRUE)){
+//						BringWindowToTop(items[i].hWnd);
+//						AttachThreadInput(curThreadId,threadId,FALSE);
+//					}
+//				}
 				Sleep(100);
 			}
 			StepBar();
@@ -307,5 +307,38 @@ void CloseSlot(QuickSlot *slot){
 	for(i=0;i<slot->itemCount;i++){
 		PostMessage(slot->item[i].hWnd,WM_CLOSE,0,0);
 		slot->item[i].hWnd=0;
+	}
+}
+char IsSlotOpened(QuickSlot slot){
+	int j;
+	for(j=0;j<slot.itemCount;j++){
+		if(slot.item[j].hWnd){
+			return 1;
+		}
+	}
+	return 0;
+}
+void ForegroundSlot(QuickSlot slot){
+	int i;
+	Item *items;
+	DWORD foregroundId;
+	DWORD id;
+	
+	for(i=0;i<slot.itemCount;i++){
+		items=slot.item;
+//		printf("slot.item[i].hWnd: %d\n",slot.item[i].hWnd);
+//		printf("%d\n",SetWindowPos(slot.item[i].hWnd,HWND_TOP,0,0,0,0,SWP_NOSIZE|SWP_NOMOVE));
+//		Sleep(100);
+		foregroundId=GetWindowThreadProcessId(items[i].hWnd,NULL);
+		id=GetCurrentThreadId();
+		if(AttachThreadInput(id,foregroundId,TRUE)){
+			SetForegroundWindow(items[i].hWnd);
+			//BringWindowToTop(items[i].hWnd);
+			AttachThreadInput(id,foregroundId,FALSE);
+		}
+		Sleep(100);
+//		while(GetForegroundWindow()!=slot.item[i].hWnd){
+//		}
+//		printf("done");
 	}
 }

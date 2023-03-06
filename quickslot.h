@@ -11,7 +11,6 @@ typedef struct _quickslot{
 	char slotName[256];
 	char itemCount;
 }QuickSlot;
-//slot key is VK-VK_F1
 
 char LoadQuickslot(QuickSlot (*)[],int);
 char SaveQuickslot(QuickSlot *,int);
@@ -21,5 +20,7 @@ void ShowItemList(QuickSlot,HWND);
 void ShowItemInfo(char *,Item,HWND);
 void ShowSlotData(QuickSlot *);
 void CloseSlot(QuickSlot *);
+char IsSlotOpened(QuickSlot);
+void ForegroundSlot(QuickSlot);
 
 #endif
