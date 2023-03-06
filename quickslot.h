@@ -22,5 +22,7 @@ void ShowSlotData(QuickSlot *);
 void CloseSlot(QuickSlot *);
 char IsSlotOpened(QuickSlot);
 void ForegroundSlot(QuickSlot);
+BOOL FilterWindow(HWND);
+BOOL IsFilteredWindow(char *);
 
 #endif

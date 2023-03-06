@@ -228,6 +228,7 @@ void TimerFunc(HWND hWnd){
 			ForegroundSlot(quickslot[index]);
 			return;
 		}
+		
 		SetNowIndex(index);
 		StartThread(SpreadThreadFunc,(int *)&index);
 		DialogBox(g_hInst,MAKEINTRESOURCE(DLG_PROGRESS),mainWnd,(DLGPROC)ProgressDlgProc);
@@ -235,16 +236,16 @@ void TimerFunc(HWND hWnd){
 }
 
 
-BOOL IsFilteredWindow(char *name){
-	const char *windowFilter[]={"SystemSettings.exe","ApplicationFrameHost.exe","TextInputHost.exe","Program_Quickslot.exe"};
-	int i;
-	for(i=0;i<(sizeof(windowFilter)/sizeof(char *));i++){
-		if(!strcmp(name,windowFilter[i])){
-			return TRUE;
-		}
-	}
-	return FALSE;
-}
+////BOOL IsFilteredWindow(char *name){
+////	const char *windowFilter[]={"SystemSettings.exe","ApplicationFrameHost.exe","TextInputHost.exe","Program_Quickslot.exe"};
+////	int i;
+////	for(i=0;i<(sizeof(windowFilter)/sizeof(char *));i++){
+////		if(!strcmp(name,windowFilter[i])){
+////			return TRUE;
+////		}
+////	}
+////	return FALSE;
+////}
 BOOL CALLBACK EnumWindowsProc(HWND hWnd,LPARAM lParam){
 	QuickSlot *lpQuickslot=(QuickSlot *)lParam;
 	
