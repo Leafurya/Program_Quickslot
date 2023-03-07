@@ -82,10 +82,14 @@ int GetSlotIndex(int key){
 	char isDesktop=1;
 	char className[128]={0};
 	
-	if((GetKeyState(VK_SHIFT)&0x8000)&&(GetKeyState(VK_CONTROL)&0x8000)){
+	//printf("GetAsyncKeyState(VK_SHIFT): %x|GetAsyncKeyState(VK_CONTROL): %x\n",GetAsyncKeyState(VK_SHIFT),GetAsyncKeyState(VK_CONTROL));
+	
+	if((GetAsyncKeyState(VK_SHIFT)&0x8000)&&(GetAsyncKeyState(VK_CONTROL)&0x8000)){
+		//printf("yes");
 		for(i=0;i<KEYCOUNT;i++){
-			if((GetKeyState(VK_F1+i)&0x8000)&&toggle){
+			if((GetAsyncKeyState(VK_F1+i)&0x8000)&&toggle){
 				toggle=0;
+				printf("index: %d\n",i);
 				//EnumWindows(IsDesktopProc,(LPARAM)&isDesktop);
 //				GetClassName(GetForegroundWindow(),className,sizeof(className));
 //				if(!strcmp("WorkerW",className)||!strcmp("Progman",className)){
@@ -99,6 +103,7 @@ int GetSlotIndex(int key){
 		}
 	}
 	else{
+		//printf("no");
 		toggle=1;
 	}
 	return -1; //didn't find

@@ -552,16 +552,19 @@ unsigned __stdcall KeyInputThreadFunc(void *args){
 	
 	while(keyThreadKiller){
 		if((index=GetSlotIndex())!=-1){
+			if(!quickslot[index].itemCount){
+				continue;
+			}
 			if(IsSlotOpened(quickslot[index])){
 				ForegroundSlot(quickslot[index]);
+				continue;
 			}
-			else{
-				SetNowIndex(index);
-				StartThread(SpreadThreadFunc,(int *)&index);
-				DialogBox(g_hInst,MAKEINTRESOURCE(DLG_PROGRESS),mainWnd,(DLGPROC)ProgressDlgProc);
-				//Sleep(200);
-				//ForegroundSlot(quickslot[index]);
-			}
+			SetNowIndex(index);
+			StartThread(SpreadThreadFunc,(int *)&index);
+			DialogBox(g_hInst,MAKEINTRESOURCE(DLG_PROGRESS),mainWnd,(DLGPROC)ProgressDlgProc);
+			//Sleep(200);
+			//ForegroundSlot(quickslot[index]);
+			
 		}
 		Sleep(1);	
 	}
