@@ -88,14 +88,13 @@ int APIENTRY WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance
 	if(!LoadQuickslot(&quickslot,sizeof(quickslot))){
 		show=SW_SHOW;
 		memset(quickslot,0,sizeof(quickslot));
-		//printf("zero memory\n");
-	}            
+	}
 	
 	hWnd=CreateWindow(mainWndClass,mainWndClass,WS_OVERLAPPEDWINDOW,
 		  CW_USEDEFAULT,CW_USEDEFAULT,mainWndW,mainWndH,
 		  NULL,(HMENU)NULL,hInstance,NULL);
 	ShowWindow(hWnd,show);
-	ShowWindow(hWnd,SW_SHOW);
+	//ShowWindow(hWnd,SW_SHOW);
 
 	while(GetMessage(&Message,0,0,0)) {
 		TranslateMessage(&Message);
