@@ -19,5 +19,6 @@ void FreeList(List *);
 void ReturnToHead(List *);
 void RemoveData(List *,int);
 char FindData(List *,void *,char (*)(void *,void *));
+void ShowAllData(List *);
 
 #endif

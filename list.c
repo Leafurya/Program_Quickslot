@@ -62,3 +62,9 @@ char FindData(List *list,void *data,char (*Compare)(void *data1,void *data2)){
 	}
 	return -1;
 }
+void ShowAllData(List *list){
+	ReturnToHead(list);
+	while(MoveNext(list)){
+		printf("list: %s\n",(char *)GetCurData(*list));
+	}
+}

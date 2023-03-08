@@ -23,7 +23,7 @@ LRESULT CALLBACK ListProc(HWND,UINT,WPARAM,LPARAM);
 BOOL CALLBACK EnumWindowsProc(HWND,LPARAM);
 BOOL CALLBACK ModiDlgProc(HWND,UINT,WPARAM,LPARAM);
 BOOL CALLBACK NameDlgProc(HWND,UINT,WPARAM,LPARAM);
-BOOL CALLBACK ProgressDlgProc(HWND,UINT,WPARAM,LPARAM);
+//BOOL CALLBACK ProgressDlgProc(HWND,UINT,WPARAM,LPARAM);
 
 void InitWindow(HWND);
 void TimerFunc(HWND);
@@ -95,7 +95,7 @@ int APIENTRY WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance
 		  CW_USEDEFAULT,CW_USEDEFAULT,mainWndW,mainWndH,
 		  NULL,(HMENU)NULL,hInstance,NULL);
 	ShowWindow(hWnd,show);
-	//ShowWindow(hWnd,SW_SHOW);
+	ShowWindow(hWnd,SW_SHOW);
 
 	while(GetMessage(&Message,0,0,0)) {
 		TranslateMessage(&Message);
@@ -250,59 +250,59 @@ void TimerFunc(HWND hWnd){
 ////	}
 ////	return FALSE;
 ////}
-BOOL CALLBACK EnumWindowsProc(HWND hWnd,LPARAM lParam){
-	QuickSlot *lpQuickslot=(QuickSlot *)lParam;
-	
-	BOOL isVisible=IsWindowVisible(hWnd);
-	DWORD exStyle=GetWindowLong(hWnd,GWL_EXSTYLE);
-	BOOL isAppWindow=(exStyle&WS_EX_APPWINDOW);
-	BOOL isToolWindow=(exStyle&WS_EX_TOOLWINDOW);
-	BOOL isOwned=GetWindow(hWnd,GW_OWNER)?TRUE:FALSE;
-	
-	WINDOWINFO wInfo;
-	DWORD pID;
-	HANDLE hProc;
-	char tpath[1024]={0};
-	char path[1024]={0};
-	STRING str;
-	int i;
-	char *progName;
-	RECT rect;
-	
-	if(!isVisible){
-		return TRUE;
-	}
-	if(!(isAppWindow||(!isToolWindow&&!isOwned))){
-		return TRUE;
-	}
-	
-	GetWindowThreadProcessId(hWnd,&pID);
-	hProc=OpenProcess(PROCESS_QUERY_INFORMATION|PROCESS_VM_READ,FALSE,pID);
-	if(hProc){
-		GetModuleFileNameEx(hProc,NULL,path,1024);
-		str=Split(path,'\\');
-		progName=str.strings[str.size-1];
-		if(!IsFilteredWindow(progName)){
-			GetWindowInfo(hWnd,&wInfo);
-			sprintf(tpath,"\"%s\"",path);
-			GetWindowRect(hWnd,&rect);
-			lpQuickslot->item[lpQuickslot->itemCount++]=CreateItem(path,NULL,IsZoomed(hWnd),wInfo.rcWindow,hWnd);
-		}
-		DeleteString(&str);
-	}
-	CloseHandle(hProc);
-	
-	return TRUE;
-}
+//BOOL CALLBACK EnumWindowsProc(HWND hWnd,LPARAM lParam){
+//	QuickSlot *lpQuickslot=(QuickSlot *)lParam;
+//	
+//	BOOL isVisible=IsWindowVisible(hWnd);
+//	DWORD exStyle=GetWindowLong(hWnd,GWL_EXSTYLE);
+//	BOOL isAppWindow=(exStyle&WS_EX_APPWINDOW);
+//	BOOL isToolWindow=(exStyle&WS_EX_TOOLWINDOW);
+//	BOOL isOwned=GetWindow(hWnd,GW_OWNER)?TRUE:FALSE;
+//	
+//	WINDOWINFO wInfo;
+//	DWORD pID;
+//	HANDLE hProc;
+//	char tpath[1024]={0};
+//	char path[1024]={0};
+//	STRING str;
+//	int i;
+//	char *progName;
+//	RECT rect;
+//	
+//	if(!isVisible){
+//		return TRUE;
+//	}
+//	if(!(isAppWindow||(!isToolWindow&&!isOwned))){
+//		return TRUE;
+//	}
+//	
+//	GetWindowThreadProcessId(hWnd,&pID);
+//	hProc=OpenProcess(PROCESS_QUERY_INFORMATION|PROCESS_VM_READ,FALSE,pID);
+//	if(hProc){
+//		GetModuleFileNameEx(hProc,NULL,path,1024);
+//		str=Split(path,'\\');
+//		progName=str.strings[str.size-1];
+//		if(!IsFilteredWindow(progName)){
+//			GetWindowInfo(hWnd,&wInfo);
+//			sprintf(tpath,"\"%s\"",path);
+//			GetWindowRect(hWnd,&rect);
+//			lpQuickslot->item[lpQuickslot->itemCount++]=CreateItem(path,NULL,IsZoomed(hWnd),wInfo.rcWindow,hWnd);
+//		}
+//		DeleteString(&str);
+//	}
+//	CloseHandle(hProc);
+//	
+//	return TRUE;
+//}
 	void ShowAboutItemFunc(int itemIndex,char reList){
 		if(reList)
 			ShowItemList(quickslot[nowSlotIndex],sc.liItems);
 		ShowItemInfo(quickslot[nowSlotIndex].slotName,quickslot[nowSlotIndex].item[itemIndex],sc.stInfo);
 	}
-void ShowSaveButton(char val){
-	ShowWindow(sc.btFind,val?SW_HIDE:SW_SHOW);
-	ShowWindow(sc.btSave,val?SW_SHOW:SW_HIDE);
-}
+	void ShowSaveButton(char val){
+		ShowWindow(sc.btFind,val?SW_HIDE:SW_SHOW);
+		ShowWindow(sc.btSave,val?SW_SHOW:SW_HIDE);
+	}
 void SaveCtrlsCommandFunc(WPARAM wParam,LPARAM lParam){
 	int i;
 	char msgString[256];
@@ -346,7 +346,7 @@ void SaveCtrlsCommandFunc(WPARAM wParam,LPARAM lParam){
 			}
 			saving=1;
 			ZeroMemory(&quickslot[nowSlotIndex],sizeof(QuickSlot));
-			EnumWindows(EnumWindowsProc,(LPARAM)&quickslot[nowSlotIndex]);
+			EnumWindows(GetOpenedWindowProc,(LPARAM)&quickslot[nowSlotIndex]);
 			MessageBox(mainWnd,"슬롯에 저장할 프로그램을 감지했습니다\n매개변수를 설정하여 정교한 작업을 시작하세요.\n모든 설정이 끝난 후 저장버튼을 클릭해주세요.","알림",MB_OK);
 			ShowAboutItemFunc(itemIndex,1);
 			ShowSaveButton(1);

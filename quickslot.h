@@ -23,6 +23,10 @@ void CloseSlot(QuickSlot *);
 char IsSlotOpened(QuickSlot);
 void ForegroundSlot(QuickSlot);
 BOOL FilterWindow(HWND);
-BOOL IsFilteredWindow(char *);
+
+BOOL IsUselessWindow(char *);
+BOOL GetProcessPath(char *,HWND);
+
+BOOL CALLBACK GetOpenedWindowProc(HWND,LPARAM);
 
 #endif
