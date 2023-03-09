@@ -32,6 +32,7 @@ void ShowSaveButton(char);
 
 unsigned __stdcall SpreadThreadFunc(void *);
 unsigned __stdcall KeyInputThreadFunc(void *);
+unsigned __stdcall ObserveSlotThreadFunc(void *);
 
 HWND mainWnd;
 RECT mainRect;
@@ -46,7 +47,7 @@ QuickSlot quickslot[KEYCOUNT];
 
 HICON programIcon;
 HANDLE hKeyInputThread;
-int keyThreadKiller=1;
+int threadKiller=1;
 
 int nowSlotIndex=0;
 int itemIndex=0;
@@ -77,10 +78,10 @@ int APIENTRY WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance
 	WndClass.style=CS_HREDRAW | CS_VREDRAW;
 	RegisterClass(&WndClass);
 
-//	AllocConsole(); 
-//	freopen("COIN$", "r", stdin);
-//	freopen("CONOUT$", "w", stdout);
-//	freopen("CONOUT$", "w", stderr); 
+	AllocConsole(); 
+	freopen("COIN$", "r", stdin);
+	freopen("CONOUT$", "w", stdout);
+	freopen("CONOUT$", "w", stderr); 
 	
 	if(!opendir("./data")){
 		mkdir("./data");
@@ -101,7 +102,7 @@ int APIENTRY WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance
 		DispatchMessage(&Message);
 	}
 
-//	FreeConsole();
+	FreeConsole();
 
 	return Message.wParam;
 }
@@ -179,7 +180,7 @@ LRESULT CALLBACK MainWndProc(HWND hWnd,UINT iMessage,WPARAM wParam,LPARAM lParam
 			ShowWindow(hWnd,SW_HIDE);
 			return 0;
 		case WM_DESTROY:
-			keyThreadKiller=0;
+			threadKiller=0;
 			WaitForSingleObject(hKeyInputThread,INFINITE);
 			CloseHandle(hKeyInputThread);
 			DeleteTrayIcon();
@@ -238,61 +239,6 @@ void TimerFunc(HWND hWnd){
 	}
 }
 
-
-////BOOL IsFilteredWindow(char *name){
-////	const char *windowFilter[]={"SystemSettings.exe","ApplicationFrameHost.exe","TextInputHost.exe","Program_Quickslot.exe"};
-////	int i;
-////	for(i=0;i<(sizeof(windowFilter)/sizeof(char *));i++){
-////		if(!strcmp(name,windowFilter[i])){
-////			return TRUE;
-////		}
-////	}
-////	return FALSE;
-////}
-//BOOL CALLBACK EnumWindowsProc(HWND hWnd,LPARAM lParam){
-//	QuickSlot *lpQuickslot=(QuickSlot *)lParam;
-//	
-//	BOOL isVisible=IsWindowVisible(hWnd);
-//	DWORD exStyle=GetWindowLong(hWnd,GWL_EXSTYLE);
-//	BOOL isAppWindow=(exStyle&WS_EX_APPWINDOW);
-//	BOOL isToolWindow=(exStyle&WS_EX_TOOLWINDOW);
-//	BOOL isOwned=GetWindow(hWnd,GW_OWNER)?TRUE:FALSE;
-//	
-//	WINDOWINFO wInfo;
-//	DWORD pID;
-//	HANDLE hProc;
-//	char tpath[1024]={0};
-//	char path[1024]={0};
-//	STRING str;
-//	int i;
-//	char *progName;
-//	RECT rect;
-//	
-//	if(!isVisible){
-//		return TRUE;
-//	}
-//	if(!(isAppWindow||(!isToolWindow&&!isOwned))){
-//		return TRUE;
-//	}
-//	
-//	GetWindowThreadProcessId(hWnd,&pID);
-//	hProc=OpenProcess(PROCESS_QUERY_INFORMATION|PROCESS_VM_READ,FALSE,pID);
-//	if(hProc){
-//		GetModuleFileNameEx(hProc,NULL,path,1024);
-//		str=Split(path,'\\');
-//		progName=str.strings[str.size-1];
-//		if(!IsFilteredWindow(progName)){
-//			GetWindowInfo(hWnd,&wInfo);
-//			sprintf(tpath,"\"%s\"",path);
-//			GetWindowRect(hWnd,&rect);
-//			lpQuickslot->item[lpQuickslot->itemCount++]=CreateItem(path,NULL,IsZoomed(hWnd),wInfo.rcWindow,hWnd);
-//		}
-//		DeleteString(&str);
-//	}
-//	CloseHandle(hProc);
-//	
-//	return TRUE;
-//}
 	void ShowAboutItemFunc(int itemIndex,char reList){
 		if(reList)
 			ShowItemList(quickslot[nowSlotIndex],sc.liItems);
@@ -540,6 +486,7 @@ unsigned __stdcall SpreadThreadFunc(void *args){
 		default:
 			break;
 	}
+	StartThread(ObserveSlotThreadFunc,&quickslot[index]);
 	sprintf(trayMessage,"\"%s\" 슬롯을 열었습니다.",quickslot[index].slotName);
 	ExitDialog();
 	return 1;
@@ -549,7 +496,7 @@ unsigned __stdcall KeyInputThreadFunc(void *args){
 	RECT rt;
 	char text[256]={0};
 	
-	while(keyThreadKiller){
+	while(threadKiller){
 		if((index=GetSlotIndex())!=-1){
 			if(!quickslot[index].itemCount){
 				continue;
@@ -566,5 +513,26 @@ unsigned __stdcall KeyInputThreadFunc(void *args){
 			
 		}
 		Sleep(1);	
+	}
+}
+unsigned __stdcall ObserveSlotThreadFunc(void *args){
+	QuickSlot *slot=(QuickSlot *)args;
+	int i;
+	DWORD pID;
+	HWND *hWnd;
+	
+	while(threadKiller){
+		for(i=0;i<slot->itemCount;i++){
+			hWnd=&slot->item[i].hWnd;
+			if(!GetWindowThreadProcessId(*hWnd,&pID)){
+				*hWnd=0;
+				continue;
+			}
+			break;
+		}
+		if(i==slot->itemCount){
+			return 0;
+		}
+		Sleep(1);
 	}
 }

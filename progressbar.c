@@ -13,17 +13,12 @@ HWND _hDlg=0;
 
 BOOL CALLBACK ProgressDlgProc(HWND hDlg,UINT iMessage,WPARAM wParam,LPARAM lParam){
 	int i;
-	RECT rt;
-	int w,h;
 	
 	switch(iMessage){
 		case WM_INITDIALOG:
 			_hDlg=hDlg;
-			GetWindowRect(hDlg,&rt);
-			w=rt.right-rt.left;
-			h=rt.bottom-rt.top;
 			//SetWindowLongPtr(hDlg,GWL_EXSTYLE,)
-			SetWindowPos(hDlg,HWND_TOPMOST,(GetSystemMetrics(SM_CXSCREEN)/2)-(w/2),(GetSystemMetrics(SM_CYSCREEN)/2)-(h/2),0,0,SWP_NOSIZE);
+			SetWindowPos(hDlg,HWND_TOPMOST,0,0,0,0,SWP_NOMOVE|SWP_NOSIZE);
 			
 			hProgressBar=GetDlgItem(hDlg,DLG_PB_BAR);
 			SendMessage(hProgressBar,PBM_SETRANGE,0,MAKELPARAM(0,quickslot[_nowIndex].itemCount*2));

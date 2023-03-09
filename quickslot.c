@@ -63,9 +63,11 @@ BOOL GetProcessPath(char *path,HWND hWnd){
 	hProc=OpenProcess(PROCESS_QUERY_INFORMATION|PROCESS_VM_READ,FALSE,pID);
 	if(hProc){
 		GetModuleFileNameEx(hProc,NULL,path,1024);
+		CloseHandle(hProc);
+		return TRUE;
 	}
 	CloseHandle(hProc);
-	return TRUE;
+	return FALSE;
 }
 
 BOOL CALLBACK SavePreWindows(HWND hWnd,LPARAM lParam){
@@ -84,10 +86,15 @@ BOOL CALLBACK GetOpenedWindowProc(HWND hWnd,LPARAM lParam){
 	STRING str;
 	char *progName;
 	WINDOWINFO wInfo;
+	int i;
 	
 	if(GetProcessPath(path,hWnd)){
 		str=Split(path,'\\');
 		progName=str.strings[str.size-1];
+//		for(i=0;i<str.size;i++){
+//			printf("%s|",str.strings[i]);
+//		}
+		printf("\n");
 		if(!IsUselessWindow(progName)){
 			GetWindowInfo(hWnd,&wInfo);
 			sprintf(tpath,"\"%s\"",path);

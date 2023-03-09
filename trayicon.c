@@ -56,10 +56,11 @@ void TrayCommandFunc(HWND hWnd,LPARAM lParam,QuickSlot *slot,int maxSlotSize){
 			SetForegroundWindow(hWnd);
 			GetCursorPos(&mousePos);
 			TrackPopupMenu(trayMenu,TPM_LEFTALIGN|TPM_RIGHTBUTTON,mousePos.x,mousePos.y,0,hWnd,NULL);
+			DestroyMenu(trayMenu);
 			break;
 		case WM_LBUTTONUP:
 			ShowWindow(hWnd,SW_SHOW);
-			SetForegroundWindow(hWnd);
+			//SetForegroundWindow(hWnd);
 			break;
 	}
 }
