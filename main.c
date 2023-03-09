@@ -216,7 +216,7 @@ void InitWindow(HWND hWnd){
 	ShowSaveButton(0);
 	
 	oldListProc=(WNDPROC)SetWindowLongPtr(sc.liItems,GWLP_WNDPROC,(LONG_PTR)ListProc);
-	ShowSlotData(quickslot);
+	//ShowSlotData(quickslot);
 }
 	char SlotNameCompare(void *data1,void *data2){
 		return !strcmp((char *)data1,(char *)data2);
@@ -346,9 +346,9 @@ void SaveCtrlsCommandFunc(WPARAM wParam,LPARAM lParam){
 			saving=1;
 			ZeroMemory(&quickslot[nowSlotIndex],sizeof(QuickSlot));
 			EnumWindows(GetOpenedWindowProc,(LPARAM)&quickslot[nowSlotIndex]);
-			MessageBox(mainWnd,"슬롯에 저장할 프로그램을 감지했습니다\n매개변수를 설정하여 정교한 작업을 시작하세요.\n모든 설정이 끝난 후 저장버튼을 클릭해주세요.","알림",MB_OK);
 			ShowAboutItemFunc(itemIndex,1);
 			ShowSaveButton(1);
+			MessageBox(mainWnd,"슬롯에 저장할 프로그램을 감지했습니다\n매개변수를 설정하여 정교한 작업을 시작하세요.\n모든 설정이 끝난 후 저장버튼을 클릭해주세요.","알림",MB_OK);
 			break;
 		case SAVECTRLS_BT_MODI:
 			itemIndex=SendMessage(sc.liItems,LB_GETCURSEL,0,0);
@@ -403,10 +403,10 @@ BOOL CALLBACK ModiDlgProc(HWND hDlg,UINT iMessage,WPARAM wParam,LPARAM lParam){
 				case ID_BT_OK:
 					GetDlgItemText(hDlg,ID_ED_PATH,quickslot[nowSlotIndex].item[itemIndex].path,sizeof(quickslot[nowSlotIndex].item[itemIndex].path));
 					GetDlgItemText(hDlg,ID_ED_PARAM,quickslot[nowSlotIndex].item[itemIndex].parameter,sizeof(quickslot[nowSlotIndex].item[itemIndex].parameter));
-					
 					EndDialog(hDlg,wParam);
 					return TRUE;
 			}
+			break;
 	}
 	return FALSE;
 }

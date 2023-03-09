@@ -2,13 +2,12 @@
 #include <stdio.h>
 #include <strproc2.h>
 
-Item CreateItem(char *path,char *parameter,char maximized,RECT winPos,HWND hWnd){
+Item CreateItem(char *path,char *name,char *parameter,char maximized,RECT winPos,HWND hWnd){
 	Item item;
-	STRING string=Split(path,'\\');
 	
 	memset(&item,0,sizeof(Item));
-	sprintf(item.path,"\"%s\"",path);
-	sprintf(item.name,"%s",string.strings[string.size-1]);
+	sprintf(item.path,"%s",path);
+	sprintf(item.name,"%s",name);
 	if(parameter){
 		sprintf(item.parameter,"%s",parameter);
 	}
@@ -20,9 +19,7 @@ Item CreateItem(char *path,char *parameter,char maximized,RECT winPos,HWND hWnd)
 	item.h=winPos.bottom-winPos.top;
 	item.hWnd=hWnd;
 	
-	DeleteString(&string);
-	
-	printf("(%d,%d) path: %s | %s\n",item.xpos,item.ypos,item.path,item.parameter);
+	//printf("(%d,%d) path: %s | %s\n",item.xpos,item.ypos,item.path,item.parameter);
 	
 	return item;
 }

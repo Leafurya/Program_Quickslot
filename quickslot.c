@@ -91,7 +91,7 @@ BOOL CALLBACK GetOpenedWindowProc(HWND hWnd,LPARAM lParam){
 		if(!IsUselessWindow(progName)){
 			GetWindowInfo(hWnd,&wInfo);
 			sprintf(tpath,"\"%s\"",path);
-			lpQuickslot->item[lpQuickslot->itemCount++]=CreateItem(tpath,NULL,IsZoomed(hWnd),wInfo.rcWindow,hWnd);
+			lpQuickslot->item[lpQuickslot->itemCount++]=CreateItem(tpath,progName,NULL,IsZoomed(hWnd),wInfo.rcWindow,hWnd);
 		}
 		DeleteString(&str);
 	}
@@ -198,12 +198,6 @@ char SaveQuickslot(QuickSlot *pQuickslot,int size){
 		}
 		return 1;
 	}
-
-	
-
-
-
-
 	char StopSpread(char *blockVar,List *list){
 		int i;
 		while(*blockVar){
@@ -228,11 +222,13 @@ char SaveQuickslot(QuickSlot *pQuickslot,int size){
 		seinfo.nShow=SW_SHOW;
 		seinfo.fMask=SEE_MASK_NOCLOSEPROCESS;
 		
-		ShellExecuteEx(&seinfo);
+		if(!ShellExecuteEx(&seinfo)){
+			printf("error: %d\n",GetLastError());
+		}
 		
 		//printf("\n%s %s\topen\n",item.path,item.parameter);
 		
-		CloseHandle(seinfo.hProcess);
+		//CloseHandle(seinfo.hProcess);
 	}
 	char GetItemWinHandle(Item *item,char *blockVar,List *list){
 		int timeout=0;
