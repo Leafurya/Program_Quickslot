@@ -98,7 +98,9 @@ BOOL CALLBACK GetOpenedWindowProc(HWND hWnd,LPARAM lParam){
 		if(!IsUselessWindow(progName)){
 			GetWindowInfo(hWnd,&wInfo);
 			sprintf(tpath,"\"%s\"",path);
+			printf("name: %s\n",lpQuickslot->slotName);
 			lpQuickslot->item[lpQuickslot->itemCount++]=CreateItem(tpath,progName,NULL,IsZoomed(hWnd),wInfo.rcWindow,hWnd);
+			//printf("maxi:%d\thWnd:%d\tparam: %s|path:%s\n",slot[i].item[j].maximized,slot[i].item[j].hWnd,slot[i].item[j].parameter,slot[i].item[j].path);
 		}
 		DeleteString(&str);
 	}
@@ -143,7 +145,7 @@ void ShowSlotData(QuickSlot *slot){
 			printf("maxi:%d\thWnd:%d\tparam: %s|path:%s\n",slot[i].item[j].maximized,slot[i].item[j].hWnd,slot[i].item[j].parameter,slot[i].item[j].path);
 			printf("(%d,%d)\n",slot[i].item[j].xpos,slot[i].item[j].ypos);
 		}
-		printf("-------------------------\n");
+		printf("%d-------------------------\n",i);
 	}
 }
 int GetSlotIndex(int key){
@@ -341,10 +343,15 @@ void ShowItemList(QuickSlot slot,HWND list){
 		SendMessage(list,LB_ADDSTRING,0,(LPARAM)"EMPTY");
 	}
 }
-void ShowItemInfo(char *name,Item item,HWND stText){
+void ShowItemInfo(char *name,Item *item,HWND stText){
 	char info[2048]={0,};
 	
-	sprintf(info,"%s\n\n경로:%s\n\n매개변수:%s",strlen(name)?name:"-",item.path,strlen(item.parameter)?item.parameter:"-");//strlen(name)?name:"-"
+	if(item){
+		sprintf(info,"%s\n\n경로:%s\n\n매개변수:%s",strlen(name)?name:"-",item->path,strlen(item->parameter)?item->parameter:"-");//strlen(name)?name:"-"
+	}
+	else{
+		sprintf(info,"%s\n\n경로:-\n\n매개변수:-",strlen(name)?name:"-");//strlen(name)?name:"-"
+	}
 	SetWindowText(stText,info);
 }
 void CloseSlot(QuickSlot *slot){

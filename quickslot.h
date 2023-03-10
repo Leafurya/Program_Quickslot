@@ -17,7 +17,7 @@ char SaveQuickslot(QuickSlot *,int);
 int GetSlotIndex();
 char SpreadQuickslot(QuickSlot *,int);
 void ShowItemList(QuickSlot,HWND);
-void ShowItemInfo(char *,Item,HWND);
+void ShowItemInfo(char *,Item *,HWND);
 void ShowSlotData(QuickSlot *);
 void CloseSlot(QuickSlot *);
 char IsSlotOpened(QuickSlot);
