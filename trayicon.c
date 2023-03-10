@@ -43,6 +43,10 @@ void TrayCommandFunc(HWND hWnd,LPARAM lParam,QuickSlot *slot,int maxSlotSize){
 		case WM_RBUTTONUP:
 			openedSlotList=CreatePopupMenu();
 			
+			AppendMenu(openedSlotList,MF_STRING,-1,"테스트 서브");
+			
+			//TrackPopupMenu(openedSlotList,TPM_LEFTALIGN|TPM_RIGHTBUTTON,mousePos.x,mousePos.y,0,hWnd,NULL);
+			
 			trayMenu=CreatePopupMenu();
 			for(i=0;i<maxSlotSize;i++){
 				if(IsSlotOpened(slot[i])){
@@ -50,13 +54,15 @@ void TrayCommandFunc(HWND hWnd,LPARAM lParam,QuickSlot *slot,int maxSlotSize){
 					AppendMenu(trayMenu,MF_STRING,(UINT_PTR)(MAKEWPARAM(WM_CLOSE_SLOT,i)),menuStr);
 				}
 			}
+			AppendMenu(trayMenu,MF_POPUP,(UINT_PTR)openedSlotList,"sub");
 			AppendMenu(trayMenu,MF_SEPARATOR,0,0);
 			AppendMenu(trayMenu,MF_STRING,WM_OPEN_PROGRAM,"열기");
 			AppendMenu(trayMenu,MF_STRING,WM_EXIT_PROGRAM,"종료");
 			SetForegroundWindow(hWnd);
 			GetCursorPos(&mousePos);
 			TrackPopupMenu(trayMenu,TPM_LEFTALIGN|TPM_RIGHTBUTTON,mousePos.x,mousePos.y,0,hWnd,NULL);
-			DestroyMenu(trayMenu);
+			//DestroyMenu(trayMenu);
+			printf("rclick\n");
 			break;
 		case WM_LBUTTONUP:
 			ShowWindow(hWnd,SW_SHOW);
