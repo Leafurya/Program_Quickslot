@@ -18,6 +18,7 @@ BOOL CALLBACK ProgressDlgProc(HWND hDlg,UINT iMessage,WPARAM wParam,LPARAM lPara
 		case WM_INITDIALOG:
 			_hDlg=hDlg;
 			//SetWindowLongPtr(hDlg,GWL_EXSTYLE,)
+			printf("hDlg: %d\n",hDlg);
 			SetWindowText(hDlg,quickslot[_nowIndex].slotName);
 			SetWindowPos(hDlg,HWND_TOPMOST,0,0,0,0,SWP_NOMOVE|SWP_NOSIZE);
 			

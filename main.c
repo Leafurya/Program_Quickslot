@@ -506,7 +506,6 @@ LRESULT CALLBACK ListProc(HWND hWnd,UINT iMessage,WPARAM wParam,LPARAM lParam){
 	return CallWindowProc(oldListProc,hWnd,iMessage,wParam,lParam);
 }
 unsigned __stdcall SpreadThreadFunc(void *args){
-	//DialogBox(g_hInst,MAKEINTRESOURCE(DLG_PROGRESS),mainWnd,(DLGPROC)ProgressDlgProc);
 	int i;
 	char trayMessage[32]={0};
 	int index=*((int *)args);
@@ -523,6 +522,7 @@ unsigned __stdcall SpreadThreadFunc(void *args){
 	}
 	StartThread(ObserveSlotThreadFunc,&quickslot[index]);
 	sprintf(trayMessage,"\"%s\" 슬롯을 열었습니다.",quickslot[index].slotName);
+	ForegroundSlot(quickslot[index]);
 	ExitDialog();
 	return 1;
 }
@@ -543,9 +543,6 @@ unsigned __stdcall KeyInputThreadFunc(void *args){
 			SetNowIndex(index);
 			StartThread(SpreadThreadFunc,(int *)&index);
 			DialogBox(g_hInst,MAKEINTRESOURCE(DLG_PROGRESS),mainWnd,(DLGPROC)ProgressDlgProc);
-			//Sleep(200);
-			//ForegroundSlot(quickslot[index]);
-			
 		}
 		Sleep(1);	
 	}
