@@ -15,7 +15,7 @@
 #include "progressbar.h"
 #include "thread.h"
 
-#define TIMER_INPUT	0
+//#define TIMER_INPUT	0
 #define WM_FINDWINDOW	WM_USER+4
 
 LRESULT CALLBACK MainWndProc(HWND,UINT,WPARAM,LPARAM);
@@ -23,14 +23,17 @@ LRESULT CALLBACK ListProc(HWND,UINT,WPARAM,LPARAM);
 BOOL CALLBACK EnumWindowsProc(HWND,LPARAM);
 BOOL CALLBACK ModiDlgProc(HWND,UINT,WPARAM,LPARAM);
 BOOL CALLBACK NameDlgProc(HWND,UINT,WPARAM,LPARAM);
-BOOL CALLBACK ProgressDlgProc(HWND,UINT,WPARAM,LPARAM);
+//BOOL CALLBACK ProgressDlgProc(HWND,UINT,WPARAM,LPARAM);
 
 void InitWindow(HWND);
 void TimerFunc(HWND);
 void SaveCtrlsCommandFunc(WPARAM,LPARAM);
 void ShowSaveButton(char);
+void ShowAboutItemFunc(int,char);
 
 unsigned __stdcall SpreadThreadFunc(void *);
+unsigned __stdcall KeyInputThreadFunc(void *);
+unsigned __stdcall ObserveSlotThreadFunc(void *);
 
 HWND mainWnd;
 RECT mainRect;
@@ -42,12 +45,16 @@ CtrlManager cm;
 SaveCtrls sc;
 
 QuickSlot quickslot[KEYCOUNT];
+
 HICON programIcon;
+HANDLE hKeyInputThread;
+int threadKiller=1;
 
 int nowSlotIndex=0;
 int itemIndex=0;
 char *trayName="퀵슬롯";
 char saving=0;
+int mainWndW=500,mainWndH=300;
 
 int APIENTRY WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance
 		  ,LPSTR lpszCmdParam,int nCmdShow)
@@ -83,11 +90,10 @@ int APIENTRY WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance
 	if(!LoadQuickslot(&quickslot,sizeof(quickslot))){
 		show=SW_SHOW;
 		memset(quickslot,0,sizeof(quickslot));
-		//printf("zero memory\n");
-	}            
+	}
 	
 	hWnd=CreateWindow(mainWndClass,mainWndClass,WS_OVERLAPPEDWINDOW,
-		  CW_USEDEFAULT,CW_USEDEFAULT,500,300,
+		  CW_USEDEFAULT,CW_USEDEFAULT,mainWndW,mainWndH,
 		  NULL,(HMENU)NULL,hInstance,NULL);
 	ShowWindow(hWnd,show);
 	//ShowWindow(hWnd,SW_SHOW);
@@ -116,12 +122,16 @@ LRESULT CALLBACK MainWndProc(HWND hWnd,UINT iMessage,WPARAM wParam,LPARAM lParam
 	char trayMessage[32]={0};
 	switch(iMessage) {
 		case WM_CREATE:
+			mainWnd=hWnd;
 			InitWindow(hWnd);
 			return 0;
 		case WM_SIZE:
 			if(wParam!=SIZE_MINIMIZED){
 				GetClientRect(hWnd,&mainRect);
 				CallMoveFunc(cm,mainRect);
+			}
+			if(wParam==SIZE_MINIMIZED){
+				printf("SIZE_MINIMIZED\n");
 			}
 			return 0;
 		case WM_PAINT:
@@ -136,15 +146,8 @@ LRESULT CALLBACK MainWndProc(HWND hWnd,UINT iMessage,WPARAM wParam,LPARAM lParam
 					break;
 			}
 			return 0;
-		case WM_TIMER:
-			switch(wParam){
-				case TIMER_INPUT:
-					TimerFunc(hWnd);
-					break;
-			}
-			return 0;
 		case WM_TRAY_MSG:
-			TrayCommandFunc(hWnd,lParam);
+			TrayCommandFunc(hWnd,lParam,quickslot,KEYCOUNT);
 			return 0;
 		case WM_COMMAND:
 			switch((int)(LOWORD(wParam)/100)){
@@ -152,13 +155,41 @@ LRESULT CALLBACK MainWndProc(HWND hWnd,UINT iMessage,WPARAM wParam,LPARAM lParam
 					SaveCtrlsCommandFunc(wParam,lParam);
 					break;
 				default:
-					switch(wParam){
+					index=HIWORD(wParam);
+					switch(LOWORD(wParam)){
 						case WM_EXIT_PROGRAM:
 							DestroyWindow(hWnd);
 							break;
 						case WM_OPEN_PROGRAM:
 							ShowWindow(hWnd,SW_SHOW);
 							SetForegroundWindow(hWnd);
+							break;
+						case WM_CLOSE_SLOT:
+							CloseSlot(&quickslot[index]);
+							break;
+						case WM_OPEN_SLOT:
+							SetNowIndex(index);
+							StartThread(SpreadThreadFunc,(int *)&index);
+							DialogBox(g_hInst,MAKEINTRESOURCE(DLG_PROGRESS),mainWnd,(DLGPROC)ProgressDlgProc);
+							break;
+						case WM_FOREGROUND_SLOT:
+							ForegroundSlot(quickslot[index]);
+							break;
+						case WM_SLOT_PROPERTY:
+							ShowWindow(hWnd,SW_SHOW);
+							SendMessage(hWnd,WM_COMMAND,SAVECTRLS_BT_ORIGIN+index,0);
+							break;
+						case WM_FILL_SLOT:
+							ShowWindow(hWnd,SW_SHOW);
+							if(nowSlotIndex==index){
+								SendMessage(hWnd,WM_COMMAND,SAVECTRLS_BT_FIND,0);
+								break;
+							}
+							SendMessage(hWnd,WM_COMMAND,SAVECTRLS_BT_ORIGIN+index,0);
+							//printf("index: %d\n",index); 
+							if(nowSlotIndex==index){
+								SendMessage(hWnd,WM_COMMAND,SAVECTRLS_BT_FIND,0);
+							}
 							break;
 					}
 					break;
@@ -168,6 +199,9 @@ LRESULT CALLBACK MainWndProc(HWND hWnd,UINT iMessage,WPARAM wParam,LPARAM lParam
 			ShowWindow(hWnd,SW_HIDE);
 			return 0;
 		case WM_DESTROY:
+			threadKiller=0;
+			WaitForSingleObject(hKeyInputThread,INFINITE);
+			CloseHandle(hKeyInputThread);
 			DeleteTrayIcon();
 			DestroyCtrlManager(&cm);
 			PostQuitMessage(0);
@@ -192,103 +226,53 @@ void InitWindow(HWND hWnd){
 			quickslot[index].item[i].hWnd=0;
 		}
 	}
-	SetTimer(hWnd,TIMER_INPUT,1,NULL);
+	//SetTimer(hWnd,TIMER_INPUT,1,NULL);
+	hKeyInputThread=StartThread(KeyInputThreadFunc,NULL);
 	
 	ShowItemList(quickslot[nowSlotIndex],sc.liItems);
-	ShowItemInfo(quickslot[nowSlotIndex].slotName,quickslot[nowSlotIndex].item[0],sc.stInfo);
+	ShowItemInfo(quickslot[nowSlotIndex].slotName,NULL,sc.stInfo);
 	
 	CreateTrayIcon(hWnd,programIcon,trayName);
 	ShowSaveButton(0);
 	
 	oldListProc=(WNDPROC)SetWindowLongPtr(sc.liItems,GWLP_WNDPROC,(LONG_PTR)ListProc);
-	ShowSlotData(quickslot);
-	
+	//ShowSlotData(quickslot);
 }
+	char SlotNameCompare(void *data1,void *data2){
+		return !strcmp((char *)data1,(char *)data2);
+	}
 void TimerFunc(HWND hWnd){
 	int index;
 	int i;
 	char trayMessage[32]={0};
 	
 	if((index=GetSlotIndex())!=-1){
-		//DialogBox(g_hInst,MAKEINTRESOURCE(IDD_DIALOG1),mainWnd,(DLGPROC)ModiDlgProc)==ID_BT_CANCLE){
-		for(i=0;i<quickslot[index].itemCount;i++){
-			if(quickslot[index].item[i].hWnd){
-				CloseSlot(&quickslot[index]);
-				sprintf(trayMessage,"\"%s\" 슬롯을 닫았습니다.",quickslot[index].slotName);
-				CreateNotification(mainWnd,trayName,trayMessage);
-				return;
-			}
+		if(IsSlotOpened(quickslot[index])){
+			ForegroundSlot(quickslot[index]);
+			return;
 		}
+		
 		SetNowIndex(index);
 		StartThread(SpreadThreadFunc,(int *)&index);
 		DialogBox(g_hInst,MAKEINTRESOURCE(DLG_PROGRESS),mainWnd,(DLGPROC)ProgressDlgProc);
 	}
 }
 
-
-BOOL IsFilteredWindow(char *name){
-	const char *windowFilter[]={"SystemSettings.exe","ApplicationFrameHost.exe","TextInputHost.exe","Program_Quickslot.exe"};
-	int i;
-	for(i=0;i<(sizeof(windowFilter)/sizeof(char *));i++){
-		if(!strcmp(name,windowFilter[i])){
-			return TRUE;
-		}
-	}
-	return FALSE;
-}
-BOOL CALLBACK EnumWindowsProc(HWND hWnd,LPARAM lParam){
-	QuickSlot *lpQuickslot=(QuickSlot *)lParam;
-	
-	BOOL isVisible=IsWindowVisible(hWnd);
-	DWORD exStyle=GetWindowLong(hWnd,GWL_EXSTYLE);
-	BOOL isAppWindow=(exStyle&WS_EX_APPWINDOW);
-	BOOL isToolWindow=(exStyle&WS_EX_TOOLWINDOW);
-	BOOL isOwned=GetWindow(hWnd,GW_OWNER)?TRUE:FALSE;
-	
-	WINDOWINFO wInfo;
-	DWORD pID;
-	HANDLE hProc;
-	char tpath[1024]={0};
-	char path[1024]={0};
-	STRING str;
-	int i;
-	char *progName;
-	RECT rect;
-	
-	if(!isVisible){
-		return TRUE;
-	}
-	if(!(isAppWindow||(!isToolWindow&&!isOwned))){
-		return TRUE;
-	}
-	
-	GetWindowThreadProcessId(hWnd,&pID);
-	hProc=OpenProcess(PROCESS_QUERY_INFORMATION|PROCESS_VM_READ,FALSE,pID);
-	if(hProc){
-		GetModuleFileNameEx(hProc,NULL,path,1024);
-		str=Split(path,'\\');
-		progName=str.strings[str.size-1];
-		if(!IsFilteredWindow(progName)){
-			GetWindowInfo(hWnd,&wInfo);
-			sprintf(tpath,"\"%s\"",path);
-			GetWindowRect(hWnd,&rect);
-			lpQuickslot->item[lpQuickslot->itemCount++]=CreateItem(path,NULL,IsZoomed(hWnd),wInfo.rcWindow,hWnd);
-		}
-		DeleteString(&str);
-	}
-	CloseHandle(hProc);
-	
-	return TRUE;
-}
 	void ShowAboutItemFunc(int itemIndex,char reList){
+		printf("nowSlotIndex: %d\n",nowSlotIndex);
 		if(reList)
 			ShowItemList(quickslot[nowSlotIndex],sc.liItems);
-		ShowItemInfo(quickslot[nowSlotIndex].slotName,quickslot[nowSlotIndex].item[itemIndex],sc.stInfo);
+		if(itemIndex==-1){
+			ShowItemInfo(quickslot[nowSlotIndex].slotName,NULL,sc.stInfo);
+		}
+		else{
+			ShowItemInfo(quickslot[nowSlotIndex].slotName,&quickslot[nowSlotIndex].item[itemIndex],sc.stInfo);
+		}
 	}
-void ShowSaveButton(char val){
-	ShowWindow(sc.btFind,val?SW_HIDE:SW_SHOW);
-	ShowWindow(sc.btSave,val?SW_SHOW:SW_HIDE);
-}
+	void ShowSaveButton(char val){
+		ShowWindow(sc.btFind,val?SW_HIDE:SW_SHOW);
+		ShowWindow(sc.btSave,val?SW_SHOW:SW_HIDE);
+	}
 void SaveCtrlsCommandFunc(WPARAM wParam,LPARAM lParam){
 	int i;
 	char msgString[256];
@@ -318,12 +302,11 @@ void SaveCtrlsCommandFunc(WPARAM wParam,LPARAM lParam){
 				break;
 			}
 			SaveQuickslot(quickslot,sizeof(quickslot));
-			ShowItemInfo(quickslot[nowSlotIndex].slotName,quickslot[nowSlotIndex].item[0],sc.stInfo);
+			ShowItemInfo(quickslot[nowSlotIndex].slotName,NULL,sc.stInfo);
 			ShowSaveButton(0);
 			saving=0;
 			break;
 		case SAVECTRLS_BT_FIND:
-			itemIndex=0;
 			if(quickslot[nowSlotIndex].itemCount!=0){
 				if(MessageBox(mainWnd,"슬롯을 교체하겠습니까?","알림",MB_YESNO)==IDNO){
 					reList=0;
@@ -331,14 +314,16 @@ void SaveCtrlsCommandFunc(WPARAM wParam,LPARAM lParam){
 				}
 			}
 			saving=1;
+			itemIndex=-1;
 			ZeroMemory(&quickslot[nowSlotIndex],sizeof(QuickSlot));
-			EnumWindows(EnumWindowsProc,(LPARAM)&quickslot[nowSlotIndex]);
-			MessageBox(mainWnd,"슬롯에 저장할 프로그램을 감지했습니다\n매개변수를 설정하여 정교한 작업을 시작하세요.\n모든 설정이 끝난 후 저장버튼을 클릭해주세요.","알림",MB_OK);
+			EnumWindows(GetOpenedWindowProc,(LPARAM)&quickslot[nowSlotIndex]);
 			ShowAboutItemFunc(itemIndex,1);
 			ShowSaveButton(1);
+			
+			MessageBox(mainWnd,"슬롯에 저장할 프로그램을 감지했습니다\n매개변수를 설정하여 정교한 작업을 시작하세요.\n모든 설정이 끝난 후 저장버튼을 클릭해주세요.","알림",MB_OK);
 			break;
 		case SAVECTRLS_BT_MODI:
-			itemIndex=SendMessage(sc.liItems,LB_GETCURSEL,0,0);
+			//itemIndex=SendMessage(sc.liItems,LB_GETCURSEL,0,0);
 			if(itemIndex==-1){
 				MessageBox(mainWnd,"아이템을 선택해주세요.","알림",MB_OK);
 				break;
@@ -366,9 +351,11 @@ void SaveCtrlsCommandFunc(WPARAM wParam,LPARAM lParam){
 					break;
 				}
 				ZeroMemory(&quickslot[nowSlotIndex],sizeof(QuickSlot));
+				saving=0;
 			}
-			itemIndex=0;
+			itemIndex=-1;
 			nowSlotIndex=wParam-SAVECTRLS_BT_ORIGIN;
+			
 			ShowAboutItemFunc(itemIndex,1);
 			ShowSaveButton(0);
 			break;
@@ -390,21 +377,22 @@ BOOL CALLBACK ModiDlgProc(HWND hDlg,UINT iMessage,WPARAM wParam,LPARAM lParam){
 				case ID_BT_OK:
 					GetDlgItemText(hDlg,ID_ED_PATH,quickslot[nowSlotIndex].item[itemIndex].path,sizeof(quickslot[nowSlotIndex].item[itemIndex].path));
 					GetDlgItemText(hDlg,ID_ED_PARAM,quickslot[nowSlotIndex].item[itemIndex].parameter,sizeof(quickslot[nowSlotIndex].item[itemIndex].parameter));
-					
 					EndDialog(hDlg,wParam);
 					return TRUE;
 			}
+			break;
 	}
 	return FALSE;
 }
 BOOL CALLBACK NameDlgProc(HWND hDlg,UINT iMessage,WPARAM wParam,LPARAM lParam){
 	int i;
+	char name[256]={0};
 	switch(iMessage){
 		case WM_INITDIALOG:
 			if(strlen(quickslot[nowSlotIndex].slotName)==0){
-				sprintf(quickslot[nowSlotIndex].slotName,"F%d슬롯",nowSlotIndex+1); 
+				sprintf(name,"F%d슬롯",nowSlotIndex+1); 
 			}
-			SetDlgItemText(hDlg,ID_ED_NAME,quickslot[nowSlotIndex].slotName);
+			SetDlgItemText(hDlg,ID_ED_NAME,name);
 			break;
 		case WM_COMMAND:
 			switch(wParam){
@@ -431,7 +419,6 @@ BOOL CALLBACK NameDlgProc(HWND hDlg,UINT iMessage,WPARAM wParam,LPARAM lParam){
 			return;
 		}
 		index=SendMessage(hWnd,LB_GETCURSEL,0,0);
-		printf("index: %d,itemCount: %d\n",index,quickslot[nowSlotIndex].itemCount);
 		if(((direction<0)?(index==0):((index+1)>=quickslot[nowSlotIndex].itemCount))){
 			return;
 		}
@@ -512,23 +499,13 @@ LRESULT CALLBACK ListProc(HWND hWnd,UINT iMessage,WPARAM wParam,LPARAM lParam){
 	return CallWindowProc(oldListProc,hWnd,iMessage,wParam,lParam);
 }
 unsigned __stdcall SpreadThreadFunc(void *args){
-	//DialogBox(g_hInst,MAKEINTRESOURCE(DLG_PROGRESS),mainWnd,(DLGPROC)ProgressDlgProc);
 	int i;
 	char trayMessage[32]={0};
 	int index=*((int *)args);
-//	HWND *hDlg;
-//	hDlg=GetDlgHandleAdr();
-//	for(i=0;i<quickslot[index].itemCount;i++){
-//		if(quickslot[index].item[i].hWnd){
-//			CloseSlot(&quickslot[index]);
-//			sprintf(trayMessage,"\"%s\" 슬롯을 닫았습니다.",quickslot[index].slotName);
-//			CreateNotification(mainWnd,trayName,trayMessage);
-//			return 1;
-//		}
-//	}
-//	while(!(*hDlg)){
-//		printf("hDlg: %d\n",*hDlg);
-//	}
+	HWND hWnd;
+	//SetWindowPos(mainWnd,HWND_TOPMOST,0,0,0,0,SWP_NOSIZE|SWP_NOMOVE);
+	
+	//SetActiveWindow(mainWnd);
 	switch(SpreadQuickslot(quickslot,index)){
 		case -1:
 			CloseSlot(&quickslot[index]);
@@ -540,12 +517,52 @@ unsigned __stdcall SpreadThreadFunc(void *args){
 		default:
 			break;
 	}
+	StartThread(ObserveSlotThreadFunc,&quickslot[index]);
 	sprintf(trayMessage,"\"%s\" 슬롯을 열었습니다.",quickslot[index].slotName);
-	//ShowSlotData(quickslot);
-//	CreateNotification(mainWnd,trayName,trayMessage);
-//	ChangeTrayTitle(quickslot[index].slotName);
-	//printf("sendMessage result: %d\n",SendMessage(*hDlg,DM_EXIT,0,0));
-	//EndDialog(*hDlg,1);
+	ForegroundSlot(quickslot[index]);
 	ExitDialog();
 	return 1;
+}
+unsigned __stdcall KeyInputThreadFunc(void *args){
+	int index;
+	RECT rt;
+	char text[256]={0};
+	
+	while(threadKiller){
+		if((index=GetSlotIndex())!=-1){
+			if(!quickslot[index].itemCount){
+				continue;
+			}
+			if(IsSlotOpened(quickslot[index])){
+				ForegroundSlot(quickslot[index]);
+				continue;
+			}
+			SetNowIndex(index);
+			StartThread(SpreadThreadFunc,(int *)&index);
+			
+			DialogBox(g_hInst,MAKEINTRESOURCE(DLG_PROGRESS),mainWnd,(DLGPROC)ProgressDlgProc);
+		}
+		Sleep(1);	
+	}
+}
+unsigned __stdcall ObserveSlotThreadFunc(void *args){
+	QuickSlot *slot=(QuickSlot *)args;
+	int i;
+	DWORD pID;
+	HWND *hWnd;
+	
+	while(threadKiller){
+		for(i=0;i<slot->itemCount;i++){
+			hWnd=&slot->item[i].hWnd;
+			if(!GetWindowThreadProcessId(*hWnd,&pID)){
+				*hWnd=0;
+				continue;
+			}
+			break;
+		}
+		if(i==slot->itemCount){
+			return 0;
+		}
+		Sleep(1);
+	}
 }

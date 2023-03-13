@@ -13,6 +13,6 @@ typedef struct _item{
 	HWND hWnd;
 }Item;
 
-Item CreateItem(char *,char *,char,RECT,HWND);
+Item CreateItem(char *,char *,char *,char,RECT,HWND);
 
 #endif

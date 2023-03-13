@@ -23,22 +23,22 @@ void CreateSaveCtrls(void *ctrls,HWND hWnd,HINSTANCE hInst){
 	SaveCtrls *c=(SaveCtrls *)ctrls;
 	HMENU btSlotID;
 	
-	c->btSlot[i]=CreateWindow("button",keys[i],WS_CHILD|WS_BORDER,0,0,0,0,hWnd,(HMENU)SAVECTRLS_BT_F1,hInst,NULL);i++;
-	c->btSlot[i]=CreateWindow("button",keys[i],WS_CHILD|WS_BORDER,0,0,0,0,hWnd,(HMENU)SAVECTRLS_BT_F2,hInst,NULL);i++;
-	c->btSlot[i]=CreateWindow("button",keys[i],WS_CHILD|WS_BORDER,0,0,0,0,hWnd,(HMENU)SAVECTRLS_BT_F3,hInst,NULL);i++;
-	c->btSlot[i]=CreateWindow("button",keys[i],WS_CHILD|WS_BORDER,0,0,0,0,hWnd,(HMENU)SAVECTRLS_BT_F4,hInst,NULL);i++;
-	c->btSlot[i]=CreateWindow("button",keys[i],WS_CHILD|WS_BORDER,0,0,0,0,hWnd,(HMENU)SAVECTRLS_BT_F5,hInst,NULL);i++;
-	c->btSlot[i]=CreateWindow("button",keys[i],WS_CHILD|WS_BORDER,0,0,0,0,hWnd,(HMENU)SAVECTRLS_BT_F6,hInst,NULL);i++;
-	c->btSlot[i]=CreateWindow("button",keys[i],WS_CHILD|WS_BORDER,0,0,0,0,hWnd,(HMENU)SAVECTRLS_BT_F7,hInst,NULL);i++;
-	c->btSlot[i]=CreateWindow("button",keys[i],WS_CHILD|WS_BORDER,0,0,0,0,hWnd,(HMENU)SAVECTRLS_BT_F8,hInst,NULL);i++;
-	c->btSlot[i]=CreateWindow("button",keys[i],WS_CHILD|WS_BORDER,0,0,0,0,hWnd,(HMENU)SAVECTRLS_BT_F9,hInst,NULL);i++;
-	c->btSlot[i]=CreateWindow("button",keys[i],WS_CHILD|WS_BORDER,0,0,0,0,hWnd,(HMENU)SAVECTRLS_BT_F10,hInst,NULL);i++;
-	c->btSlot[i]=CreateWindow("button",keys[i],WS_CHILD|WS_BORDER,0,0,0,0,hWnd,(HMENU)SAVECTRLS_BT_F11,hInst,NULL);i++;
-	c->btSlot[i]=CreateWindow("button",keys[i],WS_CHILD|WS_BORDER,0,0,0,0,hWnd,(HMENU)SAVECTRLS_BT_F12,hInst,NULL);
+//	c->btSlot[i]=CreateWindow("button",keys[i],WS_CHILD|WS_BORDER,0,0,0,0,hWnd,(HMENU)SAVECTRLS_BT_F1,hInst,NULL);i++;
+//	c->btSlot[i]=CreateWindow("button",keys[i],WS_CHILD|WS_BORDER,0,0,0,0,hWnd,(HMENU)SAVECTRLS_BT_F2,hInst,NULL);i++;
+//	c->btSlot[i]=CreateWindow("button",keys[i],WS_CHILD|WS_BORDER,0,0,0,0,hWnd,(HMENU)SAVECTRLS_BT_F3,hInst,NULL);i++;
+//	c->btSlot[i]=CreateWindow("button",keys[i],WS_CHILD|WS_BORDER,0,0,0,0,hWnd,(HMENU)SAVECTRLS_BT_F4,hInst,NULL);i++;
+//	c->btSlot[i]=CreateWindow("button",keys[i],WS_CHILD|WS_BORDER,0,0,0,0,hWnd,(HMENU)SAVECTRLS_BT_F5,hInst,NULL);i++;
+//	c->btSlot[i]=CreateWindow("button",keys[i],WS_CHILD|WS_BORDER,0,0,0,0,hWnd,(HMENU)SAVECTRLS_BT_F6,hInst,NULL);i++;
+//	c->btSlot[i]=CreateWindow("button",keys[i],WS_CHILD|WS_BORDER,0,0,0,0,hWnd,(HMENU)SAVECTRLS_BT_F7,hInst,NULL);i++;
+//	c->btSlot[i]=CreateWindow("button",keys[i],WS_CHILD|WS_BORDER,0,0,0,0,hWnd,(HMENU)SAVECTRLS_BT_F8,hInst,NULL);i++;
+//	c->btSlot[i]=CreateWindow("button",keys[i],WS_CHILD|WS_BORDER,0,0,0,0,hWnd,(HMENU)SAVECTRLS_BT_F9,hInst,NULL);i++;
+//	c->btSlot[i]=CreateWindow("button",keys[i],WS_CHILD|WS_BORDER,0,0,0,0,hWnd,(HMENU)SAVECTRLS_BT_F10,hInst,NULL);i++;
+//	c->btSlot[i]=CreateWindow("button",keys[i],WS_CHILD|WS_BORDER,0,0,0,0,hWnd,(HMENU)SAVECTRLS_BT_F11,hInst,NULL);i++;
+//	c->btSlot[i]=CreateWindow("button",keys[i],WS_CHILD|WS_BORDER,0,0,0,0,hWnd,(HMENU)SAVECTRLS_BT_F12,hInst,NULL);
 	
-	c->liItems=CreateWindow("listbox",NULL,LBS_NOTIFY|WS_CHILD|WS_BORDER|LBS_MULTIPLESEL,0,0,0,0,hWnd,(HMENU)SAVECTRLS_LI_ITEMS,hInst,NULL);
+	c->liItems=CreateWindow("listbox",NULL,LBS_NOTIFY|WS_VSCROLL|WS_CHILD|WS_BORDER|LBS_MULTIPLESEL|LBS_NOINTEGRALHEIGHT,0,0,0,0,hWnd,(HMENU)SAVECTRLS_LI_ITEMS,hInst,NULL);
 	c->btSave=CreateWindow("button","저장",WS_CHILD|WS_BORDER,0,0,0,0,hWnd,(HMENU)SAVECTRLS_BT_SAVE,hInst,NULL);
-	c->btFind=CreateWindow("button","스캔",WS_CHILD|WS_BORDER,0,0,0,0,hWnd,(HMENU)SAVECTRLS_BT_FIND,hInst,NULL);
+	c->btFind=CreateWindow("button","교체",WS_CHILD|WS_BORDER,0,0,0,0,hWnd,(HMENU)SAVECTRLS_BT_FIND,hInst,NULL);
 	c->btModi=CreateWindow("button","수정",WS_CHILD|WS_BORDER,0,0,0,0,hWnd,(HMENU)SAVECTRLS_BT_MODI,hInst,NULL);
 	c->btRemove=CreateWindow("button","삭제",WS_CHILD|WS_BORDER,0,0,0,0,hWnd,(HMENU)SAVECTRLS_BT_REMOVE,hInst,NULL);
 	
@@ -50,7 +50,7 @@ void MoveSaveCtrls(void *ctrls,RECT rect){
 	int i;
 	SaveCtrls *c=(SaveCtrls *)ctrls;
 	int btW=(int)(rect.right/FKEYCOUNT);
-	int btH=50;
+	int btH=0;//50
 	int x=0;
 	int underBtW=(int)(rect.right/3),underBtH=40,underBtY=rect.bottom-underBtH;
 	int liW=200,liH=rect.bottom-btH-underBtH;
@@ -59,9 +59,9 @@ void MoveSaveCtrls(void *ctrls,RECT rect){
 	int stW=rect.right-liW-(margin*2), stH=liH-(margin*2);
 	int stX=liW+margin, stY=btH+margin;
 	
-	for(i=0;i<FKEYCOUNT;i++,x+=btW){
-		MoveWindow(c->btSlot[i],x,0,btW,btH,TRUE);
-	}
+//	for(i=0;i<FKEYCOUNT;i++,x+=btW){
+//		MoveWindow(c->btSlot[i],x,0,btW,btH,TRUE);
+//	}
 	MoveWindow(c->liItems,0,btH,liW,liH,TRUE);
 	MoveWindow(c->stInfo,stX,stY,stW,stH,FALSE);
 	

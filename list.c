@@ -1,5 +1,6 @@
 #include "list.h"
 #include <stdlib.h>
+#include <stdio.h>
 
 #ifndef NULL
 #define NULL 0
@@ -40,5 +41,31 @@ void FreeList(List *list){
 		tnode=list->cur->next;
 		free(list->cur);
 		list->cur=tnode;
+	}
+}
+void RemoveData(List *list,int index){
+	int i;
+	ReturnToHead(list);
+	for(i=0;i<index;i++){
+		MoveNext(list);
+	}
+	free(list->cur->next);
+	list->cur->next=list->cur->next->next;
+}
+char FindData(List *list,void *data,char (*Compare)(void *data1,void *data2)){
+	ReturnToHead(list);
+	int index=0;
+	while(MoveNext(list)){
+		if(Compare(GetCurData(*list),data)){
+			return index;
+		}
+		index++;
+	}
+	return -1;
+}
+void ShowAllData(List *list){
+	ReturnToHead(list);
+	while(MoveNext(list)){
+		printf("list: %s\n",(char *)GetCurData(*list));
 	}
 }
