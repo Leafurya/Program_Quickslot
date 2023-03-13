@@ -4,6 +4,8 @@
 #include <commctrl.h>
 #include <stdio.h>
 
+#define DLG_TIMER_TOTOP 0
+
 HWND hProgressBar;
 extern QuickSlot quickslot[KEYCOUNT];
 int lastGage;
@@ -18,9 +20,11 @@ BOOL CALLBACK ProgressDlgProc(HWND hDlg,UINT iMessage,WPARAM wParam,LPARAM lPara
 		case WM_INITDIALOG:
 			_hDlg=hDlg;
 			//SetWindowLongPtr(hDlg,GWL_EXSTYLE,)
-			printf("hDlg: %d\n",hDlg);
 			SetWindowText(hDlg,quickslot[_nowIndex].slotName);
-			SetWindowPos(hDlg,HWND_TOPMOST,0,0,0,0,SWP_NOMOVE|SWP_NOSIZE);
+			SetWindowPos(hDlg,HWND_TOPMOST,0,0,0,0,SWP_NOMOVE|SWP_NOSIZE|SWP_SHOWWINDOW);
+			BringWindowToTop(hDlg);
+			printf("hDlg: %d|foreground: %d\n",hDlg,GetForegroundWindow());
+			//SetWindowPos(GetForegroundWindow(),HWND_NOTOPMOST,0,0,0,0,SWP_NOSIZE|SWP_NOMOVE);
 			
 			hProgressBar=GetDlgItem(hDlg,DLG_PB_BAR);
 			SendMessage(hProgressBar,PBM_SETRANGE,0,MAKELPARAM(0,quickslot[_nowIndex].itemCount*2));

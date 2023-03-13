@@ -146,13 +146,6 @@ LRESULT CALLBACK MainWndProc(HWND hWnd,UINT iMessage,WPARAM wParam,LPARAM lParam
 					break;
 			}
 			return 0;
-//		case WM_TIMER:
-//			switch(wParam){
-//				case TIMER_INPUT:
-//					TimerFunc(hWnd);
-//					break;
-//			}
-//			return 0;
 		case WM_TRAY_MSG:
 			TrayCommandFunc(hWnd,lParam,quickslot,KEYCOUNT);
 			return 0;
@@ -509,6 +502,10 @@ unsigned __stdcall SpreadThreadFunc(void *args){
 	int i;
 	char trayMessage[32]={0};
 	int index=*((int *)args);
+	HWND hWnd;
+	//SetWindowPos(mainWnd,HWND_TOPMOST,0,0,0,0,SWP_NOSIZE|SWP_NOMOVE);
+	
+	//SetActiveWindow(mainWnd);
 	switch(SpreadQuickslot(quickslot,index)){
 		case -1:
 			CloseSlot(&quickslot[index]);
@@ -542,6 +539,7 @@ unsigned __stdcall KeyInputThreadFunc(void *args){
 			}
 			SetNowIndex(index);
 			StartThread(SpreadThreadFunc,(int *)&index);
+			
 			DialogBox(g_hInst,MAKEINTRESOURCE(DLG_PROGRESS),mainWnd,(DLGPROC)ProgressDlgProc);
 		}
 		Sleep(1);	

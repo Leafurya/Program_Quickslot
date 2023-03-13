@@ -43,6 +43,7 @@ HMENU CreateTrayMenu(QuickSlot *slot,HMENU *slotMenu){
 	
 	for(i=0;i<KEYCOUNT;i++){
 		slotMenu[i]=CreatePopupMenu();
+		opened=0;
 		
 		if(strlen(slot[i].slotName)){
 			opened=IsSlotOpened(slot[i]);

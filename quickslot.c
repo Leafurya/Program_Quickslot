@@ -4,6 +4,7 @@
 #include <strproc2.h>
 #include <shellapi.h>
 #include <psapi.h>
+#include <time.h>
 
 #include "list.h"
 #include "progressbar.h"
@@ -232,12 +233,14 @@ char SaveQuickslot(QuickSlot *pQuickslot,int size){
 	}
 	char GetItemWinHandle(Item *item,char *blockVar,List *list){
 		int timeout=0;
+		clock_t start,end;
+		
 		do{
 			if(StopSpread(blockVar,list)){
 				return 1;
 			}
 			EnumWindows(GetHwndProc,(LPARAM)item);
-			if(timeout>=2500){
+			if(timeout>=1000){
 				item->hWnd=0;
 				return 0;
 			}
@@ -283,8 +286,6 @@ char SpreadQuickslot(QuickSlot *pOriginSlot,int slotIndex){
 				return -1;
 			}
 			items[i].hWnd=0;
-//			if(items[i].hWnd){
-//			}
 			
 			ExecuteProcess(items[i]);
 			Sleep(200);
