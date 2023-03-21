@@ -4,11 +4,11 @@
 #include <windows.h>
 #include "quickslot.h"
 
+#define DM_CLOSE	WM_USER+21
+
 BOOL CALLBACK ProgressDlgProc(HWND,UINT,WPARAM,LPARAM);
 void StepBar();
 void SetBlockVar(char *);
-HWND *GetDlgHandleAdr();
 void SetNowIndex(int);
-void CALLBACK ExitDialog();
 
 #endif

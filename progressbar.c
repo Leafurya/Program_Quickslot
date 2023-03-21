@@ -6,31 +6,34 @@
 
 #define DLG_TIMER_TOTOP 0
 
+
 HWND hProgressBar;
+HWND pbDlg;
 extern QuickSlot quickslot[KEYCOUNT];
 int lastGage;
 int _nowIndex;
 char *blockVar;
-HWND _hDlg=0;
 
 BOOL CALLBACK ProgressDlgProc(HWND hDlg,UINT iMessage,WPARAM wParam,LPARAM lParam){
 	int i;
 	
 	switch(iMessage){
 		case WM_INITDIALOG:
-			_hDlg=hDlg;
+			pbDlg=hDlg;
 			//SetWindowLongPtr(hDlg,GWL_EXSTYLE,)
 			SetWindowText(hDlg,quickslot[_nowIndex].slotName);
 			SetWindowPos(hDlg,HWND_TOPMOST,0,0,0,0,SWP_NOMOVE|SWP_NOSIZE|SWP_SHOWWINDOW);
 			BringWindowToTop(hDlg);
-			printf("hDlg: %d|foreground: %d\n",hDlg,GetForegroundWindow());
 			//SetWindowPos(GetForegroundWindow(),HWND_NOTOPMOST,0,0,0,0,SWP_NOSIZE|SWP_NOMOVE);
 			
-			hProgressBar=GetDlgItem(hDlg,DLG_PB_BAR);
-			SendMessage(hProgressBar,PBM_SETRANGE,0,MAKELPARAM(0,quickslot[_nowIndex].itemCount*2));
-			break;
+//			hProgressBar=GetDlgItem(hDlg,DLG_PB_BAR);
+//			SendMessage(hProgressBar,PBM_SETRANGE,0,MAKELPARAM(0,quickslot[_nowIndex].itemCount*2));
+			SendDlgItemMessage(pbDlg,DLG_PB_BAR,PBM_SETRANGE,0,MAKELPARAM(0,quickslot[_nowIndex].itemCount*2));
+			printf("quickslot[_nowIndex].itemCount*2: %d\n",quickslot[_nowIndex].itemCount*2);
+			return TRUE;
 		case WM_COMMAND:
-			switch(wParam){
+			printf("dlg command: %d\n",wParam);
+			switch(LOWORD(wParam)){
 				case DLG_PB_CANCEL:
 					*blockVar=1;
 					if(MessageBox(hDlg,"프로그램 전개를 중지하겠습니까?","알림",MB_YESNO)==IDNO){
@@ -38,28 +41,30 @@ BOOL CALLBACK ProgressDlgProc(HWND hDlg,UINT iMessage,WPARAM wParam,LPARAM lPara
 						return TRUE;
 					}
 					*blockVar=-1;
-					CloseHandle(hProgressBar);
-					EndDialog(hDlg,wParam);
+					DestroyWindow(hDlg);
 					return TRUE;
 			}
 			break;
+		case DM_CLOSE:
+			DestroyWindow(hDlg);
+			return TRUE;
 	}
 	return FALSE;
 }
 void StepBar(){
-	SendMessage(hProgressBar,PBM_SETSTEP,1,0);
-	SendMessage(hProgressBar,PBM_STEPIT,0,0);
+	printf("start ");
+	//printf("hProgressBar: %d\n",hProgressBar);
+//	SendMessage(hProgressBar,PBM_SETSTEP,1,0);
+//	printf("next ");
+//	SendMessage(hProgressBar,PBM_STEPIT,0,0);
+//	SendMessage(pbDlg,DM_STEP,0,0);
+	SendDlgItemMessage(pbDlg,DLG_PB_BAR,PBM_SETSTEP,1,0);
+	SendDlgItemMessage(pbDlg,DLG_PB_BAR,PBM_STEPIT,0,0);
 	printf("step\n");
 }
 void SetBlockVar(char *pVar){
 	blockVar=pVar;
 }
-HWND *GetDlgHandleAdr(){
-	return &_hDlg;
-}
 void SetNowIndex(int nowIndex){
 	_nowIndex=nowIndex;
-}
-void CALLBACK ExitDialog(){
-	EndDialog(_hDlg,DLG_PB_CANCEL);
 }
