@@ -545,9 +545,8 @@ unsigned __stdcall KeyInputThreadFunc(void *args){
 		}
 		if((index=GetSlotIndex())!=-1){
 			//hPbDlg=CreateDialog(g_hInst,MAKEINTRESOURCE(DLG_PROGRESS),mainWnd,(DLGPROC)ProgressDlgProc);
-			SetNowIndex(index);
-			SendMessage(mainWnd,WM_OPENPBDLG,0,0);
 			//ShowWindow(hPbDlg,SW_SHOW);
+			SetNowIndex(index);
 			if(!quickslot[index].itemCount){
 				continue;
 			}
@@ -555,6 +554,7 @@ unsigned __stdcall KeyInputThreadFunc(void *args){
 				ForegroundSlot(quickslot[index]);
 				continue;
 			}
+			SendMessage(mainWnd,WM_OPENPBDLG,0,0);
 			StartThread(SpreadThreadFunc,(int *)&index);
 			
 //			DialogBox(g_hInst,MAKEINTRESOURCE(DLG_PROGRESS),mainWnd,(DLGPROC)ProgressDlgProc);

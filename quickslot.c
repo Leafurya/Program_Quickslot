@@ -240,7 +240,7 @@ char SaveQuickslot(QuickSlot *pQuickslot,int size){
 				return 1;
 			}
 			EnumWindows(GetHwndProc,(LPARAM)item);
-			if(timeout>=1000){
+			if(timeout>=100){
 				item->hWnd=0;
 				return 0;
 			}
