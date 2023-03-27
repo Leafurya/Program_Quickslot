@@ -20,3 +20,4 @@
 #define DLG_PROGRESS                            300
 #define DLG_PB_BAR                              60000
 #define DLG_PB_CANCEL                           60001
+#define DLG_ST_LOG                              60002

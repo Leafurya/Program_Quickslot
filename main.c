@@ -503,27 +503,46 @@ LRESULT CALLBACK ListProc(HWND hWnd,UINT iMessage,WPARAM wParam,LPARAM lParam){
 }
 unsigned __stdcall SpreadThreadFunc(void *args){
 	int i;
-	char trayMessage[32]={0};
+	char trayMessage[2048]={0};
 	int index=*((int *)args);
 	HWND hWnd;
+	char *status[ITEM_MAXSIZE];
 	//SetWindowPos(mainWnd,HWND_TOPMOST,0,0,0,0,SWP_NOSIZE|SWP_NOMOVE);
 	
 	//SetActiveWindow(mainWnd);
-	switch(SpreadQuickslot(quickslot,index)){
+	ZeroMemory(status,sizeof(status));
+	switch(SpreadQuickslot(quickslot,index,status)){
 		case -1:
 			CloseSlot(&quickslot[index]);
 			SendMessage(hPbDlg,DM_CLOSE,0,0);
+			for(i=0;i<quickslot[index].itemCount;i++){
+				if(status[i]){
+					free(status[i]);
+				}
+			}
 			hPbDlg=0;
 			return 1;
 		case 1:
 			SendMessage(hPbDlg,DM_CLOSE,0,0);
+			for(i=0;i<quickslot[index].itemCount;i++){
+				if(status[i]){
+					free(status[i]);
+				}
+			}
 			hPbDlg=0;
 			return 1;
 		default:
 			break;
 	}
 	StartThread(ObserveSlotThreadFunc,&quickslot[index]);
-	sprintf(trayMessage,"\"%s\" 슬롯을 열었습니다.",quickslot[index].slotName);
+	for(i=0;i<quickslot[index].itemCount;i++){
+		if(status[i]){
+			strcat(trayMessage,status[i]);
+			free(status[i]);
+		}
+	}
+	printf("trayMessage: %s\n",trayMessage);
+	CreateNotification(mainWnd,"알림",trayMessage);
 	ForegroundSlot(quickslot[index]);
 	//printf(")DestroyWindow(hPbDlg): %d\n",DestroyWindow(hPbDlg));
 	SendMessage(hPbDlg,DM_CLOSE,0,0);
