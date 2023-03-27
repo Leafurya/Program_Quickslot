@@ -93,7 +93,7 @@ int APIENTRY WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance
 	}
 	
 	hWnd=CreateWindow(mainWndClass,mainWndClass,WS_OVERLAPPEDWINDOW,
-		  CW_USEDEFAULT,CW_USEDEFAULT,mainWndW,mainWndH,
+		  0,0,mainWndW,mainWndH,//CW_USEDEFAULT,CW_USEDEFAULT
 		  NULL,(HMENU)NULL,hInstance,NULL);
 	ShowWindow(hWnd,SW_HIDE);
 	//ShowWindow(hWnd,SW_SHOW);

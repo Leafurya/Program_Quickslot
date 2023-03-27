@@ -242,7 +242,7 @@ char SaveQuickslot(QuickSlot *pQuickslot,int size){
 				return 1;
 			}
 			EnumWindows(GetHwndProc,(LPARAM)item);
-			if(timeout>=100){
+			if(timeout>=500){
 				item->hWnd=0;
 				return FINDING_FAIL;
 			}
