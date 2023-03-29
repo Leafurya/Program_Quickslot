@@ -95,6 +95,7 @@ BOOL CALLBACK GetOpenedWindowProc(HWND hWnd,LPARAM lParam){
 			GetWindowInfo(hWnd,&wInfo);
 			sprintf(tpath,"\"%s\"",path);
 			lpQuickslot->item[lpQuickslot->itemCount++]=CreateItem(tpath,progName,NULL,IsZoomed(hWnd),wInfo.rcWindow,hWnd);
+			printf("lpQuickslot: %p\n",lpQuickslot);
 			//printf("maxi:%d\thWnd:%d\tparam: %s|path:%s\n",slot[i].item[j].maximized,slot[i].item[j].hWnd,slot[i].item[j].parameter,slot[i].item[j].path);
 		}
 		DeleteString(&str);
@@ -133,13 +134,13 @@ BOOL CALLBACK GetHwndProc(HWND hWnd,LPARAM lParam){
 
 void ShowSlotData(QuickSlot *slot){
 	int i,j;
-	printf("ShowSlotData==========\n");
+	printf("ShowSlotData:==========\n");
 	for(i=0;i<KEYCOUNT;i++){
 		for(j=0;j<slot[i].itemCount;j++){
 			printf("maxi:%d\thWnd:%d\tparam: %s|path:%s\n",slot[i].item[j].maximized,slot[i].item[j].hWnd,slot[i].item[j].parameter,slot[i].item[j].path);
 			printf("(%d,%d)\n",slot[i].item[j].xpos,slot[i].item[j].ypos);
 		}
-		printf("%d-------------------------\n",i);
+		printf("%d-%s-----------------------\n",i,slot->slotName);
 	}
 }
 int GetSlotIndex(int key){
@@ -330,15 +331,16 @@ char SpreadQuickslot(QuickSlot *pOriginSlot,int slotIndex,char *status[ITEM_MAXS
 	}
 	return 1;
 }
-void ShowItemList(QuickSlot slot,HWND list){
+void ShowItemList(Item *item,int itemCount,HWND list){
 	int i;
 	int listCount=SendMessage(list,LB_GETCOUNT,0,0);
 	
 	for(i=listCount;i>=0;i--){
 		SendMessage(list,LB_DELETESTRING,i,0);
 	}
-	for(i=0;i<slot.itemCount;i++){
-		SendMessage(list,LB_ADDSTRING,0,(LPARAM)slot.item[i].name);
+	for(i=0;i<itemCount;i++){
+		SendMessage(list,LB_ADDSTRING,0,(LPARAM)item[i].name);
+		printf("item[i].name: %s\n",item[i].name);
 	}
 	
 	if(!i){

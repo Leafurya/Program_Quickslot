@@ -2,6 +2,8 @@
 #include <stdio.h>
 #include <strproc2.h>
 
+extern int nowSlotIndex;
+
 Item CreateItem(char *path,char *name,char *parameter,char maximized,RECT winPos,HWND hWnd){
 	Item item;
 	
@@ -18,7 +20,7 @@ Item CreateItem(char *path,char *name,char *parameter,char maximized,RECT winPos
 	item.w=winPos.right-winPos.left;
 	item.h=winPos.bottom-winPos.top;
 	item.hWnd=hWnd;
-	
+	printf("!nowSlotIndex: %d\n",nowSlotIndex);
 	//printf("(%d,%d) path: %s | %s\n",item.xpos,item.ypos,item.path,item.parameter);
 	
 	return item;

@@ -11,16 +11,21 @@
 #define FINDING_FAIL			2
 
 typedef struct _quickslot{
-	Item item[ITEM_MAXSIZE];
-	char slotName[256];
 	char itemCount;
+	char slotName[256];
+	Item item[ITEM_MAXSIZE];
 }QuickSlot;
+typedef struct _quickslotforfinding{
+	char itemCount;
+	char slotName[256];
+	Item item[100];
+}QuickSlotForFinding;
 
 char LoadQuickslot(QuickSlot (*)[],int);
 char SaveQuickslot(QuickSlot *,int);
 int GetSlotIndex();
 char SpreadQuickslot(QuickSlot *,int,char *[]);
-void ShowItemList(QuickSlot,HWND);
+void ShowItemList(Item *,int,HWND);
 void ShowItemInfo(char *,Item *,HWND);
 void ShowSlotData(QuickSlot *);
 void CloseSlot(QuickSlot *);

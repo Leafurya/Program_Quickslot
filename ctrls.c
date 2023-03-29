@@ -51,6 +51,7 @@ void MoveSaveCtrls(void *ctrls,RECT rect){
 	SaveCtrls *c=(SaveCtrls *)ctrls;
 	int btW=(int)(rect.right/FKEYCOUNT);
 	int btH=0;//50
+//	int btH=50;//50
 	int x=0;
 	int underBtW=(int)(rect.right/3),underBtH=40,underBtY=rect.bottom-underBtH;
 	int liW=200,liH=rect.bottom-btH-underBtH;
