@@ -11,5 +11,6 @@ void StepBar();
 void SetBlockVar(char *);
 void SetNowIndex(int);
 void SetNowLog(char *);
+void SetNowSlot(QuickSlot *);
 
 #endif

@@ -13,6 +13,7 @@ extern QuickSlot quickslot[KEYCOUNT];
 int lastGage;
 int _nowIndex;
 char *blockVar;
+QuickSlot *pNowSlot;
 
 BOOL CALLBACK ProgressDlgProc(HWND hDlg,UINT iMessage,WPARAM wParam,LPARAM lParam){
 	int i;
@@ -21,15 +22,15 @@ BOOL CALLBACK ProgressDlgProc(HWND hDlg,UINT iMessage,WPARAM wParam,LPARAM lPara
 		case WM_INITDIALOG:
 			pbDlg=hDlg;
 			//SetWindowLongPtr(hDlg,GWL_EXSTYLE,)
-			SetWindowText(hDlg,quickslot[_nowIndex].slotName);
+			SetWindowText(hDlg,pNowSlot->slotName);
 			SetWindowPos(hDlg,HWND_TOPMOST,0,0,0,0,SWP_NOMOVE|SWP_NOSIZE|SWP_SHOWWINDOW);
 			BringWindowToTop(hDlg);
 			//SetWindowPos(GetForegroundWindow(),HWND_NOTOPMOST,0,0,0,0,SWP_NOSIZE|SWP_NOMOVE);
 			
 //			hProgressBar=GetDlgItem(hDlg,DLG_PB_BAR);
 //			SendMessage(hProgressBar,PBM_SETRANGE,0,MAKELPARAM(0,quickslot[_nowIndex].itemCount*2));
-			SendDlgItemMessage(pbDlg,DLG_PB_BAR,PBM_SETRANGE,0,MAKELPARAM(0,quickslot[_nowIndex].itemCount*2));
-			printf("quickslot[_nowIndex].itemCount*2: %d\n",quickslot[_nowIndex].itemCount*2);
+			SendDlgItemMessage(pbDlg,DLG_PB_BAR,PBM_SETRANGE,0,MAKELPARAM(0,pNowSlot->itemCount*2));
+			printf("quickslot[_nowIndex].itemCount*2: %d\n",pNowSlot->itemCount*2);
 			return TRUE;
 		case WM_COMMAND:
 			printf("dlg command: %d\n",wParam);
@@ -64,6 +65,9 @@ void StepBar(){
 }
 void SetBlockVar(char *pVar){
 	blockVar=pVar;
+}
+void SetNowSlot(QuickSlot *slot){
+	pNowSlot=slot;
 }
 void SetNowIndex(int nowIndex){
 	_nowIndex=nowIndex;

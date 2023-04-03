@@ -31,7 +31,7 @@ void CreateCtrlFont();
 #define SAVECTRLS_BT_F12		181
 
 typedef struct _savectrls{
-	//HWND btSlot[FKEYCOUNT];
+//	HWND btSlot[FKEYCOUNT];
 	HWND liItems;
 	HWND stInfo;
 	
@@ -42,7 +42,6 @@ typedef struct _savectrls{
 	HWND btRefind;
 	
 	HWND btModi;
-	
 }SaveCtrls;
 
 void CreateSaveCtrls(void *,HWND,HINSTANCE);
