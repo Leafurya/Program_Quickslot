@@ -12,7 +12,8 @@ void CreateCtrlFont();
 #define SAVECTRLS_BT_SAVE		101
 #define SAVECTRLS_BT_MODI		102
 #define SAVECTRLS_BT_REMOVE		103
-#define SAVECTRLS_BT_FIND		104
+#define SAVECTRLS_BT_CHANGE		104
+#define SAVECTRLS_BT_REFIND		105
 
 #define SAVECTRLS_BT_ORIGIN		170
 
@@ -32,11 +33,15 @@ void CreateCtrlFont();
 typedef struct _savectrls{
 //	HWND btSlot[FKEYCOUNT];
 	HWND liItems;
-	HWND btSave;
-	HWND btModi;
-	HWND btRemove;
-	HWND btFind;
 	HWND stInfo;
+	
+	HWND btChange;
+	HWND btRemove;
+	
+	HWND btSave;
+	HWND btRefind;
+	
+	HWND btModi;
 }SaveCtrls;
 
 void CreateSaveCtrls(void *,HWND,HINSTANCE);
