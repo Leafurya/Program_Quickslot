@@ -45,6 +45,8 @@ HMENU CreateTrayMenu(QuickSlot *slot,HMENU *slotMenu){
 		slotMenu[i]=CreatePopupMenu();
 		opened=0;
 		
+//		printf("strlen(slot[i].slotName): %d\n",strlen(slot[i].slotName));
+//		printf("slot[i].slotName: %s\n",slot[i].slotName);
 		if(strlen(slot[i].slotName)){
 			opened=IsSlotOpened(slot[i]);
 //			if(opened=IsSlotOpened(slot[i])){
