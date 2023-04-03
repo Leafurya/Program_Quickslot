@@ -212,7 +212,7 @@ char SaveQuickslot(QuickSlot *pQuickslot,int size){
 		}
 		return 0;
 	}
-	void ExecuteProcess(Item item){
+	char ExecuteProcess(Item item){
 		HANDLE target;
 		int timeout=0;
 		
@@ -227,9 +227,11 @@ char SaveQuickslot(QuickSlot *pQuickslot,int size){
 		
 		if(!ShellExecuteEx(&seinfo)){
 			printf("error: %d\n",GetLastError());
+			return EXECUTE_FAIL;
 		}
 		
 		CloseHandle(seinfo.hProcess);
+		return 0;
 	}
 	char GetItemWinHandle(Item *item,char *blockVar,List *list){
 		int timeout=0;
@@ -240,9 +242,9 @@ char SaveQuickslot(QuickSlot *pQuickslot,int size){
 				return 1;
 			}
 			EnumWindows(GetHwndProc,(LPARAM)item);
-			if(timeout>=1000){
+			if(timeout>=500){
 				item->hWnd=0;
-				return 0;
+				return FINDING_FAIL;
 			}
 			timeout++;
 			Sleep(1);
@@ -255,7 +257,9 @@ char SaveQuickslot(QuickSlot *pQuickslot,int size){
 		}
 		//printf("%d%s\n",items[i].hWnd,items[i].path);
 		if(item.hWnd){
-			MoveWindow(item.hWnd,item.xpos,item.ypos<0?100:item.ypos,item.w,item.h,TRUE);
+			if(!MoveWindow(item.hWnd,item.xpos,item.ypos<0?100:item.ypos,item.w,item.h,TRUE)){
+				return -1;
+			}
 			ShowWindow(item.hWnd,SW_NORMAL);
 			if(item.maximized){
 				ShowWindow(item.hWnd,SW_SHOWMAXIMIZED);
@@ -266,7 +270,7 @@ char SaveQuickslot(QuickSlot *pQuickslot,int size){
 		Sleep(100);
 		return 0;
 	}
-char SpreadQuickslot(QuickSlot *pOriginSlot,int slotIndex){
+char SpreadQuickslot(QuickSlot *pOriginSlot,int slotIndex,char *status[ITEM_MAXSIZE]){
 	int i;
 	QuickSlot slot=pOriginSlot[slotIndex];
 	Item *items=pOriginSlot[slotIndex].item;
@@ -281,22 +285,42 @@ char SpreadQuickslot(QuickSlot *pOriginSlot,int slotIndex){
 		EnumWindows(SavePreWindows,(LPARAM)&list);
 		
 		for(i=0;i<slot.itemCount;i++){
-			
 			if(StopSpread(&blockVar,&list)){
 				return -1;
 			}
 			items[i].hWnd=0;
 			
-			ExecuteProcess(items[i]);
+			SetNowLog(GetString("execute %s",items[i].name));
+			if(ExecuteProcess(items[i])){
+				status[i]=GetString("프로그램 실행 실패: %s\n",items[i].name);
+			}
 			Sleep(200);
-			if(GetItemWinHandle(&items[i],&blockVar,&list)){
-				return -1;
+			SetNowLog(GetString("finding %s",items[i].name));
+			switch(GetItemWinHandle(&items[i],&blockVar,&list)){
+				case 1:
+					return -1;
+				case FINDING_FAIL:
+					SetNowLog(GetString("not found %s",items[i].name));
+					if(!status[i]){
+						status[i]=GetString("프로그램 감지 실패: %s\n",items[i].name);
+					}
+					break;
+				default:
+					SetNowLog(GetString("found %s",items[i].name));
+					break;
 			}
 			StepBar();
 		}
 		for(i=0;i<slot.itemCount;i++){
-			if(MoveItemWindow(items[i],&blockVar,&list)){
-				return -1;
+			SetNowLog(GetString("move %s",items[i].name));
+			switch(MoveItemWindow(items[i],&blockVar,&list)){
+				case 1:
+					return -1;
+				case -1:
+					if(!status[i]){
+						status[i]=GetString("프로그램 재배치 실패: %s\n",items[i].name);
+					}
+					break;
 			}
 			StepBar();
 		}

@@ -68,3 +68,7 @@ void SetBlockVar(char *pVar){
 void SetNowIndex(int nowIndex){
 	_nowIndex=nowIndex;
 }
+void SetNowLog(char *log){
+	SetDlgItemText(pbDlg,DLG_ST_LOG,log);
+	free(log);
+}

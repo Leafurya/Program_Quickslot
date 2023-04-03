@@ -38,9 +38,10 @@ void CreateSaveCtrls(void *ctrls,HWND hWnd,HINSTANCE hInst){
 	
 	c->liItems=CreateWindow("listbox",NULL,LBS_NOTIFY|WS_VSCROLL|WS_CHILD|WS_BORDER|LBS_MULTIPLESEL|LBS_NOINTEGRALHEIGHT,0,0,0,0,hWnd,(HMENU)SAVECTRLS_LI_ITEMS,hInst,NULL);
 	c->btSave=CreateWindow("button","저장",WS_CHILD|WS_BORDER,0,0,0,0,hWnd,(HMENU)SAVECTRLS_BT_SAVE,hInst,NULL);
-	c->btFind=CreateWindow("button","교체",WS_CHILD|WS_BORDER,0,0,0,0,hWnd,(HMENU)SAVECTRLS_BT_FIND,hInst,NULL);
+	c->btChange=CreateWindow("button","교체",WS_CHILD|WS_BORDER,0,0,0,0,hWnd,(HMENU)SAVECTRLS_BT_CHANGE,hInst,NULL);
 	c->btModi=CreateWindow("button","수정",WS_CHILD|WS_BORDER,0,0,0,0,hWnd,(HMENU)SAVECTRLS_BT_MODI,hInst,NULL);
 	c->btRemove=CreateWindow("button","삭제",WS_CHILD|WS_BORDER,0,0,0,0,hWnd,(HMENU)SAVECTRLS_BT_REMOVE,hInst,NULL);
+	c->btRefind=CreateWindow("button","다시 감지",WS_CHILD|WS_BORDER,0,0,0,0,hWnd,(HMENU)SAVECTRLS_BT_REFIND,hInst,NULL);
 	
 	c->stInfo=CreateWindow("static","test text",WS_CHILD|SS_LEFT|WS_VISIBLE,0,0,0,0,hWnd,(HMENU)-1,hInst,NULL);
 	
@@ -67,9 +68,10 @@ void MoveSaveCtrls(void *ctrls,RECT rect){
 	
 	x=0;
 	MoveWindow(c->btSave,x,underBtY,underBtW,underBtH,TRUE);
-	MoveWindow(c->btFind,x,underBtY,underBtW,underBtH,TRUE);
+	MoveWindow(c->btChange,x,underBtY,underBtW,underBtH,TRUE);
 	x+=underBtW;
 	MoveWindow(c->btModi,x,underBtY,underBtW,underBtH,TRUE);
 	x+=underBtW;
 	MoveWindow(c->btRemove,x,underBtY,underBtW,underBtH,TRUE);
+	MoveWindow(c->btRefind,x,underBtY,underBtW,underBtH,TRUE);
 }

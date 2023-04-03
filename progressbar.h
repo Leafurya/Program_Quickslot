@@ -10,5 +10,6 @@ BOOL CALLBACK ProgressDlgProc(HWND,UINT,WPARAM,LPARAM);
 void StepBar();
 void SetBlockVar(char *);
 void SetNowIndex(int);
+void SetNowLog(char *);
 
 #endif
