@@ -342,6 +342,7 @@ void SaveCtrlsCommandFunc(WPARAM wParam,LPARAM lParam){
 //			printf("quickslot[nowSlotIndex].slotName: %s\n",quickslot[nowSlotIndex].slotName);
 			ShowItemInfo(quickslot[nowSlotIndex].slotName,NULL,sc.stInfo);
 			SendMessage(mainWnd,WM_CHANGECTRLS,PROP_CTRL,0);
+			StartThread(ObserveSlotThreadFunc,&quickslot[nowSlotIndex]);
 			saving=0;
 			//ShowSlotData(quickslot);
 			break;
