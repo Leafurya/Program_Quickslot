@@ -36,26 +36,9 @@ typedef struct _quickslotforfindingv1{
 typedef QuickSlotV1 QuickSlot;
 typedef QuickSlotForFindingV1 QuickSlotForFinding;
 
-//char LoadQuickslot(QuickSlot (*)[],int);
-//char SaveQuickslot(QuickSlot *,int);
-int GetSlotIndex();
-char SpreadQuickslot(QuickSlot *,int,char *[]);
-void ShowItemList(Item *,int,HWND);
-void ShowItemInfo(char *,Item *,HWND,HWND);
-void ShowSlotData(QuickSlot *);
-void CloseSlot(QuickSlot *);
-char IsSlotOpened(QuickSlot);
-void ForegroundSlot(QuickSlot);
-BOOL FilterWindow(HWND);
-
-BOOL IsUselessWindow(char *);
-BOOL GetProcessPath(char *,HWND);
-
-BOOL CALLBACK GetOpenedWindowProc(HWND,LPARAM);
-
 char LoadQuickslot(QuickSlot (*)[],int);
 char SaveQuickslot(QuickSlot *,int);
-//void ShowSlotData(QuickSlot *);
+void ShowSlotData(QuickSlot *);
 void CheckVersion();
 
 #endif

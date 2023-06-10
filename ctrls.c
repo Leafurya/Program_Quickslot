@@ -44,6 +44,7 @@ void CreateSaveCtrls(void *ctrls,HWND hWnd,HINSTANCE hInst){
 	c->btRefind=CreateWindow("button","다시 감지",WS_CHILD|WS_BORDER,0,0,0,0,hWnd,(HMENU)SAVECTRLS_BT_REFIND,hInst,NULL);
 	
 	c->stInfo=CreateWindow("static","test text",WS_CHILD|SS_LEFT|WS_VISIBLE,0,0,0,0,hWnd,(HMENU)-1,hInst,NULL);
+	c->cbDetecting=CreateWindow("button","감지하기",WS_CHILD|WS_VISIBLE |BS_CHECKBOX,0,0,0,0,hWnd,(HMENU)SAVECTRLS_CB_DETECTING,hInst,NULL);
 	
 	SetFontAll((HWND *)c,sizeof(SaveCtrls),font);
 }
@@ -55,15 +56,17 @@ void MoveSaveCtrls(void *ctrls,RECT rect){
 	int x=0;
 	int underBtW=(int)(rect.right/3),underBtH=40,underBtY=rect.bottom-underBtH;
 	int liW=200,liH=rect.bottom-btH-underBtH;
+	int cbW=80,cbH=40;
 	
 	int margin=20;
-	int stW=rect.right-liW-(margin*2), stH=liH-(margin*2);
-	int stX=liW+margin, stY=btH+margin;
+	int stW=rect.right-liW-(margin*2), stH=liH-(margin*2)-cbH;
+	int stX=liW+margin, stY=btH+margin+cbH;
 	
 //	for(i=0;i<FKEYCOUNT;i++,x+=btW){
 //		MoveWindow(c->btSlot[i],x,0,btW,btH,TRUE);
 //	}
 	MoveWindow(c->liItems,0,btH,liW,liH,TRUE);
+	MoveWindow(c->cbDetecting,stX,margin,cbW,cbH,TRUE);
 	MoveWindow(c->stInfo,stX,stY,stW,stH,FALSE);
 	
 	x=0;

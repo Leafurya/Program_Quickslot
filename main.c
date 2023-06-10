@@ -95,9 +95,11 @@ int APIENTRY WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance
 	if(!opendir("./data")){
 		mkdir("./data");
 	}
+	CheckVersion();
 	if(!LoadQuickslot(&quickslot,sizeof(quickslot))){
 		memset(quickslot,0,sizeof(quickslot));
 	}
+//	ShowSlotData(quickslot);
 	
 	hWnd=CreateWindow(mainWndClass,mainWndClass,WS_OVERLAPPEDWINDOW,
 		  0,0,mainWndW,mainWndH,//CW_USEDEFAULT,CW_USEDEFAULT
@@ -284,10 +286,10 @@ void InitWindow(HWND hWnd){
 		if(reList)
 			ShowItemList(item,itemSize,sc.liItems);
 		if(itemIndex==-1){
-			ShowItemInfo(slotName,NULL,sc.stInfo);
+			ShowItemInfo(slotName,NULL,sc.stInfo,sc.cbDetecting);
 		}
 		else{
-			ShowItemInfo(slotName,&item[itemIndex],sc.stInfo);
+			ShowItemInfo(slotName,&item[itemIndex],sc.stInfo,sc.cbDetecting);
 		}
 	}
 //	void ShowSaveButton(char val){
@@ -338,9 +340,10 @@ void SaveCtrlsCommandFunc(WPARAM wParam,LPARAM lParam){
 			}
 			quickslot[nowSlotIndex].itemCount=slotForFinding.itemCount;
 			sprintf(quickslot[nowSlotIndex].slotName,"%s",slotForFinding.slotName);
+//			ShowSlotData(quickslot);
 			SaveQuickslot(quickslot,sizeof(quickslot));
 //			printf("quickslot[nowSlotIndex].slotName: %s\n",quickslot[nowSlotIndex].slotName);
-			ShowItemInfo(quickslot[nowSlotIndex].slotName,NULL,sc.stInfo);
+			ShowItemInfo(quickslot[nowSlotIndex].slotName,NULL,sc.stInfo,sc.cbDetecting);
 			SendMessage(mainWnd,WM_CHANGECTRLS,PROP_CTRL,0);
 			saving=0;
 			//ShowSlotData(quickslot);
@@ -399,6 +402,21 @@ void SaveCtrlsCommandFunc(WPARAM wParam,LPARAM lParam){
 //			SendMessage(mainWnd,WM_CHANGECTRLS,SAVE_CTRL,0);
 			
 			MessageBox(mainWnd,"슬롯에 저장할 프로그램을 감지했습니다\n매개변수를 설정하여 정교한 작업을 시작하세요.\n모든 설정이 끝난 후 저장버튼을 클릭해주세요.","알림",MB_OK);
+			break;
+		case SAVECTRLS_CB_DETECTING:
+			printf("detecting %d\n",SendMessage(sc.cbDetecting,BM_GETCHECK,0,0));
+			if (SendMessage(sc.cbDetecting,BM_GETCHECK,0,0)==BST_UNCHECKED) {
+				SendMessage(sc.cbDetecting,BM_SETCHECK,BST_CHECKED,0);
+				nowSlot->item[itemIndex].detecting=1;
+			}
+			else {
+				SendMessage(sc.cbDetecting,BM_SETCHECK,BST_UNCHECKED,0);
+				nowSlot->item[itemIndex].detecting=0;
+			}
+			if(!saving){
+				SaveQuickslot(quickslot,sizeof(quickslot));
+				break;
+			}
 			break;
 		default:
 			if(saving){

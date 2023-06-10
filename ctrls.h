@@ -14,6 +14,7 @@ void CreateCtrlFont();
 #define SAVECTRLS_BT_REMOVE		103
 #define SAVECTRLS_BT_CHANGE		104
 #define SAVECTRLS_BT_REFIND		105
+#define SAVECTRLS_CB_DETECTING	106
 
 #define SAVECTRLS_BT_ORIGIN		170
 
@@ -42,6 +43,7 @@ typedef struct _savectrls{
 	HWND btRefind;
 	
 	HWND btModi;
+	HWND cbDetecting;
 }SaveCtrls;
 
 void CreateSaveCtrls(void *,HWND,HINSTANCE);
