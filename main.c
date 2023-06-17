@@ -611,7 +611,7 @@ unsigned __stdcall SpreadThreadFunc(void *args){
 			free(status[i]);
 		}
 	}
-	printf("trayMessage: %s\n",trayMessage);
+//	printf("trayMessage: %s\n",trayMessage);
 	CreateNotification(mainWnd,"¾Ë¸²",trayMessage);
 	ForegroundSlot(quickslot[index]);
 	//printf(")DestroyWindow(hPbDlg): %d\n",DestroyWindow(hPbDlg));

@@ -30,10 +30,10 @@ BOOL CALLBACK ProgressDlgProc(HWND hDlg,UINT iMessage,WPARAM wParam,LPARAM lPara
 //			hProgressBar=GetDlgItem(hDlg,DLG_PB_BAR);
 //			SendMessage(hProgressBar,PBM_SETRANGE,0,MAKELPARAM(0,quickslot[_nowIndex].itemCount*2));
 			SendDlgItemMessage(pbDlg,DLG_PB_BAR,PBM_SETRANGE,0,MAKELPARAM(0,pNowSlot->itemCount*2));
-			printf("quickslot[_nowIndex].itemCount*2: %d\n",pNowSlot->itemCount*2);
+//			printf("quickslot[_nowIndex].itemCount*2: %d\n",pNowSlot->itemCount*2);
 			return TRUE;
 		case WM_COMMAND:
-			printf("dlg command: %d\n",wParam);
+//			printf("dlg command: %d\n",wParam);
 			switch(LOWORD(wParam)){
 				case DLG_PB_CANCEL:
 					*blockVar=1;
@@ -53,7 +53,7 @@ BOOL CALLBACK ProgressDlgProc(HWND hDlg,UINT iMessage,WPARAM wParam,LPARAM lPara
 	return FALSE;
 }
 void StepBar(){
-	printf("start ");
+//	printf("start ");
 	//printf("hProgressBar: %d\n",hProgressBar);
 //	SendMessage(hProgressBar,PBM_SETSTEP,1,0);
 //	printf("next ");
@@ -61,7 +61,7 @@ void StepBar(){
 //	SendMessage(pbDlg,DM_STEP,0,0);
 	SendDlgItemMessage(pbDlg,DLG_PB_BAR,PBM_SETSTEP,1,0);
 	SendDlgItemMessage(pbDlg,DLG_PB_BAR,PBM_STEPIT,0,0);
-	printf("step\n");
+//	printf("step\n");
 }
 void SetBlockVar(char *pVar){
 	blockVar=pVar;

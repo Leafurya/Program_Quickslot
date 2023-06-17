@@ -111,6 +111,7 @@ BOOL CALLBACK GetHwndProc(HWND hWnd,LPARAM lParam){
 	
 	if(GetProcessPath(path,hWnd)){
 		compareData=GetString("%d\"%s\"\0",hWnd,path);
+		
 		if(ComparePreWindows(compareData,&list)){
 			return TRUE;
 		}
@@ -121,6 +122,7 @@ BOOL CALLBACK GetHwndProc(HWND hWnd,LPARAM lParam){
 
 		sprintf(tpath,"\"%s\"",path);
 		if(!strcmp(tpath,target->path)){
+//			printf("target->path: %s\n",target->path);
 			target->hWnd=hWnd;
 			if(IsZoomed(hWnd)){
 				ShowWindow(hWnd,SW_SHOWNORMAL);
@@ -293,7 +295,7 @@ void CheckVersion(){
 		while(*blockVar){
 			if(*blockVar==-1){
 				FreeList(list);
-				printf("stop thread\n");
+//				printf("stop thread\n");
 				return 1;
 			}
 		}
@@ -325,17 +327,24 @@ void CheckVersion(){
 		clock_t start,end;
 		
 		do{
+//			printf("finding %d %s\n",item->hWnd,item->path);
 			if(StopSpread(blockVar,list)){
+//				printf("stop thread %s\n",item->path);
 				return 1;
 			}
 			EnumWindows(GetHwndProc,(LPARAM)item);
-			if(timeout>=1000){
+//			printf("1\n");
+			if(timeout>=700){
+//				printf("not found %s\n",item->name);
 				item->hWnd=0;
 				return FINDING_FAIL;
 			}
+//			printf("2\n");
 			timeout++;
+//			printf("3\n");
 			Sleep(1);
 		}while(!item->hWnd);
+//		printf("found %s\n",item->name);
 		return 0;
 	}
 	char MoveItemWindow(Item item,char *blockVar,List *list){
@@ -354,40 +363,132 @@ void CheckVersion(){
 		}
 		//printf("move %d %s %s\n",item.hWnd,item.path,item.parameter);
 		
-		Sleep(100);
+//		Sleep(100);
 		return 0;
 	}
-	unsigned __stdcall FindWindowThread(void *arg){
-		void **sharedData=arg;
-		char *blockVar=sharedData[0];
-		List *list=sharedData[1];
-		Item *item=sharedData[2];
-		char **status=sharedData[3];
-		
-		switch(GetItemWinHandle(item,blockVar,list)){
-			case 1:
-				return -1;
-			case FINDING_FAIL:
-				SetNowLog(GetString("not found %s",item->name));
-				if(!(*status)){
-					*status=GetString("프로그램 감지 실패: %s\n",item->name);
-				}
-				return 1;
-			default:
-				SetNowLog(GetString("move %s",item->name));
-				switch(MoveItemWindow(*item,blockVar,list)){
-					case 1:
-						return -1;
-					case -1:
-						if(!(*status)){
-							*status=GetString("프로그램 재배치 실패: %s\n",item->name);
-						}
-						break;
-				}
-				StepBar();
-				break;
-		}
-	}
+//	unsigned __stdcall FindWindowThread(void *arg){
+//		void **sharedData=arg;
+//		char *blockVar=sharedData[0];
+//		List *list=sharedData[1];
+//		Item *item=sharedData[2];
+//		char **status=sharedData[3];
+//		
+//		char findResult=GetItemWinHandle(item,blockVar,list);
+//		printf("find %s %d\n",item->path,item->hWnd);
+//		
+////		printf("find thread for %s\n",item->path);
+//		switch(findResult){
+//			case 1:
+////				printf("return 1\n");
+//				return -1;
+//			case FINDING_FAIL:
+////				printf("return FINDING_FAIL\n");
+//				SetNowLog(GetString("not found %s",item->name));
+//				if(!(*status)){
+//					*status=GetString("프로그램 감지 실패: %s\n",item->name);
+//				}
+//				return 1;
+//			default:
+////				printf("return default\n");
+//				SetNowLog(GetString("move %s",item->name));
+//				switch(MoveItemWindow(*item,blockVar,list)){
+//					case 1:
+//						return -1;
+//					case -1:
+//						printf("move %s\n",item->name);
+//						if(!(*status)){
+//							*status=GetString("프로그램 재배치 실패: %s\n",item->name);
+//						}
+//						break;
+//				}
+//				
+//				break;
+//		}
+//		StepBar();
+//		return 0;
+//	}
+//char SpreadQuickslot(QuickSlot *pOriginSlot,int slotIndex,char *status[ITEM_MAXSIZE]){
+//	int i;
+//	QuickSlot slot=pOriginSlot[slotIndex];
+//	Item *items=pOriginSlot[slotIndex].item;
+//	
+//	originSlotAdr=pOriginSlot;
+//	static char blockVar=0; //controled by progressbar proc
+//	void **sharedData;
+//	HANDLE *threadHandles;
+//	DWORD threadResult;
+//	
+//	if(slot.itemCount!=0){
+//		threadHandles=(HANDLE *)malloc(sizeof(HANDLE)*slot.itemCount);
+//		blockVar=0;
+//		SetBlockVar(&blockVar);
+//		InitList(&list);
+//		EnumWindows(SavePreWindows,(LPARAM)&list);
+//		ShowAllData(&list);
+//		
+//		for(i=0;i<slot.itemCount;i++){
+//			if(StopSpread(&blockVar,&list)){
+//				return -1;
+//			}
+//			items[i].hWnd=0;
+//			
+//			SetNowLog(GetString("execute %s",items[i].name));
+//			status[i]=NULL;
+//			if(ExecuteProcess(items[i])){
+//				status[i]=GetString("프로그램 실행 실패: %s\n",items[i].name);
+//			}
+//			if(items[i].detecting&&!status[i]){
+//				sharedData=(void **)malloc(sizeof(void *)*4);
+//				sharedData[0]=&blockVar;
+//				sharedData[1]=&list;
+//				sharedData[2]=&items[i];
+//				sharedData[3]=&status[i];
+//				
+//				threadHandles[i]=StartThread(FindWindowThread,sharedData);
+////				Sleep(200);
+////				SetNowLog(GetString("finding %s",items[i].name));
+////				switch(GetItemWinHandle(&items[i],&blockVar,&list)){
+////					case 1:
+////						return -1;
+////					case FINDING_FAIL:
+////						SetNowLog(GetString("not found %s",items[i].name));
+////						if(!status[i]){
+////							status[i]=GetString("프로그램 감지 실패: %s\n",items[i].name);
+////						}
+////						break;
+////					default:
+////						SetNowLog(GetString("found %s",items[i].name));
+////						break;
+////				}
+//			}
+//			StepBar();
+//		}
+//		for(i=0;i<slot.itemCount;i++){
+//			WaitForSingleObject(threadHandles[i],INFINITE);
+//			printf("%d thread done %d\n",i,threadResult);
+//		}
+//		for(i=0;i<slot.itemCount;i++){
+//			free(sharedData);
+//		}
+////		for(i=0;i<slot.itemCount;i++){
+////			SetNowLog(GetString("move %s",items[i].name));
+////			switch(MoveItemWindow(items[i],&blockVar,&list)){
+////				case 1:
+////					return -1;
+////				case -1:
+////					if(!status[i]){
+////						status[i]=GetString("프로그램 재배치 실패: %s\n",items[i].name);
+////					}
+////					break;
+////			}
+////			StepBar();
+////		}
+//		memcpy(pOriginSlot[slotIndex].item,items,sizeof(pOriginSlot[slotIndex].item));
+//		FreeList(&list);
+//		return 0;
+//	}
+//	return 1;
+//}
 char SpreadQuickslot(QuickSlot *pOriginSlot,int slotIndex,char *status[ITEM_MAXSIZE]){
 	int i;
 	QuickSlot slot=pOriginSlot[slotIndex];
@@ -396,11 +497,8 @@ char SpreadQuickslot(QuickSlot *pOriginSlot,int slotIndex,char *status[ITEM_MAXS
 	originSlotAdr=pOriginSlot;
 	static char blockVar=0; //controled by progressbar proc
 	void **sharedData;
-	HANDLE *threadHandles;
-	DWORD threadResult;
 	
 	if(slot.itemCount!=0){
-		threadHandles=(HANDLE *)malloc(sizeof(HANDLE)*slot.itemCount);
 		blockVar=0;
 		SetBlockVar(&blockVar);
 		InitList(&list);
@@ -417,117 +515,43 @@ char SpreadQuickslot(QuickSlot *pOriginSlot,int slotIndex,char *status[ITEM_MAXS
 				status[i]=GetString("프로그램 실행 실패: %s\n",items[i].name);
 			}
 			if(items[i].detecting){
-				sharedData=(void **)malloc(sizeof(void *)*4);
-				sharedData[0]=&blockVar;
-				sharedData[1]=&list;
-				sharedData[2]=&items[i];
-				sharedData[3]=&status[i];
-				
-				threadHandles[i]=StartThread(FindWindowThread,sharedData);
-//				Sleep(200);
-//				SetNowLog(GetString("finding %s",items[i].name));
-//				switch(GetItemWinHandle(&items[i],&blockVar,&list)){
-//					case 1:
-//						return -1;
-//					case FINDING_FAIL:
-//						SetNowLog(GetString("not found %s",items[i].name));
-//						if(!status[i]){
-//							status[i]=GetString("프로그램 감지 실패: %s\n",items[i].name);
-//						}
-//						break;
-//					default:
-//						SetNowLog(GetString("found %s",items[i].name));
-//						break;
-//				}
+				Sleep(200);
+				SetNowLog(GetString("finding %s",items[i].name));
+				switch(GetItemWinHandle(&items[i],&blockVar,&list)){
+					case 1:
+						return -1;
+					case FINDING_FAIL:
+						SetNowLog(GetString("not found %s",items[i].name));
+						if(!status[i]){
+							status[i]=GetString("프로그램 감지 실패(timeout): %s\n",items[i].name);
+						}
+						break;
+					default:
+						SetNowLog(GetString("found %s",items[i].name));
+						break;
+				}
 			}
 			StepBar();
 		}
 		for(i=0;i<slot.itemCount;i++){
-			WaitForSingleObject(threadHandles[i],threadResult);
-			
+			SetNowLog(GetString("move %s",items[i].name));
+			switch(MoveItemWindow(items[i],&blockVar,&list)){
+				case 1:
+					return -1;
+				case -1:
+					if(!status[i]){
+						status[i]=GetString("프로그램 재배치 실패: %s\n",items[i].name);
+					}
+					break;
+			}
+			StepBar();
 		}
-//		for(i=0;i<slot.itemCount;i++){
-//			SetNowLog(GetString("move %s",items[i].name));
-//			switch(MoveItemWindow(items[i],&blockVar,&list)){
-//				case 1:
-//					return -1;
-//				case -1:
-//					if(!status[i]){
-//						status[i]=GetString("프로그램 재배치 실패: %s\n",items[i].name);
-//					}
-//					break;
-//			}
-//			StepBar();
-//		}
 		memcpy(pOriginSlot[slotIndex].item,items,sizeof(pOriginSlot[slotIndex].item));
 		FreeList(&list);
 		return 0;
 	}
 	return 1;
 }
-//char SpreadQuickslot(QuickSlot *pOriginSlot,int slotIndex,char *status[ITEM_MAXSIZE]){
-//	int i;
-//	QuickSlot slot=pOriginSlot[slotIndex];
-//	Item *items=pOriginSlot[slotIndex].item;
-//	
-//	originSlotAdr=pOriginSlot;
-//	static char blockVar=0; //controled by progressbar proc
-//	void **sharedData;
-//	
-//	if(slot.itemCount!=0){
-//		blockVar=0;
-//		SetBlockVar(&blockVar);
-//		InitList(&list);
-//		EnumWindows(SavePreWindows,(LPARAM)&list);
-//		
-//		for(i=0;i<slot.itemCount;i++){
-//			if(StopSpread(&blockVar,&list)){
-//				return -1;
-//			}
-//			items[i].hWnd=0;
-//			
-//			SetNowLog(GetString("execute %s",items[i].name));
-//			if(ExecuteProcess(items[i])){
-//				status[i]=GetString("프로그램 실행 실패: %s\n",items[i].name);
-//			}
-//			if(items[i].detecting){
-//				Sleep(200);
-//				SetNowLog(GetString("finding %s",items[i].name));
-//				switch(GetItemWinHandle(&items[i],&blockVar,&list)){
-//					case 1:
-//						return -1;
-//					case FINDING_FAIL:
-//						SetNowLog(GetString("not found %s",items[i].name));
-//						if(!status[i]){
-//							status[i]=GetString("프로그램 감지 실패: %s\n",items[i].name);
-//						}
-//						break;
-//					default:
-//						SetNowLog(GetString("found %s",items[i].name));
-//						break;
-//				}
-//			}
-//			StepBar();
-//		}
-//		for(i=0;i<slot.itemCount;i++){
-//			SetNowLog(GetString("move %s",items[i].name));
-//			switch(MoveItemWindow(items[i],&blockVar,&list)){
-//				case 1:
-//					return -1;
-//				case -1:
-//					if(!status[i]){
-//						status[i]=GetString("프로그램 재배치 실패: %s\n",items[i].name);
-//					}
-//					break;
-//			}
-//			StepBar();
-//		}
-//		memcpy(pOriginSlot[slotIndex].item,items,sizeof(pOriginSlot[slotIndex].item));
-//		FreeList(&list);
-//		return 0;
-//	}
-//	return 1;
-//}
 
 void ShowItemList(Item *item,int itemCount,HWND list){
 	int i;
@@ -614,5 +638,5 @@ void ForegroundSlot(QuickSlot slot){
 		//tpathtpathStopFlash(hWnd);
 		Sleep(50);
 	}
-	printf("foregrounded\n");
+//	printf("foregrounded\n");
 }
