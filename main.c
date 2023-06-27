@@ -28,6 +28,7 @@ LRESULT CALLBACK ListProc(HWND,UINT,WPARAM,LPARAM);
 BOOL CALLBACK EnumWindowsProc(HWND,LPARAM);
 BOOL CALLBACK ModiDlgProc(HWND,UINT,WPARAM,LPARAM);
 BOOL CALLBACK NameDlgProc(HWND,UINT,WPARAM,LPARAM);
+BOOL CALLBACK AddItemDlgProc(HWND,UINT,WPARAM,LPARAM);
 //BOOL CALLBACK ProgressDlgProc(HWND,UINT,WPARAM,LPARAM);
 
 void InitWindow(HWND);
@@ -87,10 +88,10 @@ int APIENTRY WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance
 	WndClass.style=CS_HREDRAW | CS_VREDRAW;
 	RegisterClass(&WndClass);
 
-//	AllocConsole(); 
-//	freopen("COIN$", "r", stdin);
-//	freopen("CONOUT$", "w", stdout);
-//	freopen("CONOUT$", "w", stderr); 
+	AllocConsole(); 
+	freopen("COIN$", "r", stdin);
+	freopen("CONOUT$", "w", stdout);
+	freopen("CONOUT$", "w", stderr); 
 	
 	if(!opendir("./data")){
 		mkdir("./data");
@@ -104,8 +105,8 @@ int APIENTRY WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance
 	hWnd=CreateWindow(mainWndClass,mainWndClass,WS_OVERLAPPEDWINDOW,
 		  0,0,mainWndW,mainWndH,//CW_USEDEFAULT,CW_USEDEFAULT
 		  NULL,(HMENU)NULL,hInstance,NULL);
-	ShowWindow(hWnd,SW_HIDE);
-	//ShowWindow(hWnd,SW_SHOW);
+//	ShowWindow(hWnd,SW_HIDE);
+	ShowWindow(hWnd,SW_SHOW);
 
 	while(GetMessage(&Message,0,0,0)) {
 		if(!IsDialogMessage(hPbDlg,&Message)){
@@ -114,7 +115,7 @@ int APIENTRY WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance
 		}
 	}
 
-//	FreeConsole();
+	FreeConsole();
 
 	return Message.wParam;
 }
@@ -418,6 +419,15 @@ void SaveCtrlsCommandFunc(WPARAM wParam,LPARAM lParam){
 				break;
 			}
 			break;
+		case SAVECTRLS_BT_ADDITEM:
+			if(DialogBox(g_hInst,MAKEINTRESOURCE(IDD_DIALOG_ADDITEM),mainWnd,(DLGPROC)AddItemDlgProc)==ID_BT_CANCLE){
+				break;
+			}
+			if(!saving){
+				SaveQuickslot(quickslot,sizeof(quickslot));
+			}
+			ShowAboutItemFunc(nowSlot->item,nowSlot->itemCount,nowSlot->slotName,itemIndex,1);
+			break;
 		default:
 			if(saving){
 				if(MessageBox(mainWnd,"슬롯으로 이동하겠습니까?\n(저장되지 않은 내용은 사라집니다.)","알림",MB_YESNO)==IDNO){
@@ -452,6 +462,65 @@ BOOL CALLBACK ModiDlgProc(HWND hDlg,UINT iMessage,WPARAM wParam,LPARAM lParam){
 					GetDlgItemText(hDlg,ID_ED_PARAM,nowSlot->item[itemIndex].parameter,sizeof(nowSlot->item[itemIndex].parameter));
 					EndDialog(hDlg,wParam);
 					return TRUE;
+			}
+			break;
+	}
+	return FALSE;
+}
+BOOL CALLBACK AddItemDlgProc(HWND hDlg,UINT iMessage,WPARAM wParam,LPARAM lParam){
+	char path[1024];
+	char param[1024];
+	char *name;
+	RECT rect={0,0,0,0};
+	static Item *item=NULL;
+	
+	STRING str;
+	
+	switch(iMessage){
+		case WM_INITDIALOG:
+			SetDlgItemText(hDlg,ADDITEM_ED_PATH,0);
+			SetDlgItemText(hDlg,ADDITEM_ED_PARAM,0);
+			break;
+		case WM_COMMAND:
+			switch(wParam){
+				case ADDITEM_BT_CANCLE:
+					if(item){
+						free(item);
+					}
+					EndDialog(hDlg,wParam);
+					return TRUE;
+				case ADDITEM_BT_OK:
+					if(!item){
+						if(MessageBox(hDlg,"위치 지정 없이 저장하겠습니까?","알림",MB_YESNO)==IDNO){
+							break;
+						}
+					}
+					if(item){
+						GetWindowRect(item->hWnd,&rect);
+						nowSlot->item[nowSlot->itemCount++]=CreateItem(item->path,item->name,item->parameter,IsZoomed(item->hWnd),rect,0,1);
+						free(item);
+					}
+					else{
+						GetDlgItemText(hDlg,ADDITEM_ED_PATH,path,sizeof(path));
+						GetDlgItemText(hDlg,ADDITEM_ED_PARAM,param,sizeof(param));
+						str=Split(path,'\\');
+						name=str.strings[str.size-1];
+						if(name[strlen(name)-1]=='\"'){
+							name[strlen(name)-1]=0;
+						}
+						
+						nowSlot->item[nowSlot->itemCount++]=CreateItem(item->path,name,item->parameter,0,rect,0,0);
+						
+						DeleteString(&str);
+					}
+					EndDialog(hDlg,wParam);
+					return TRUE;
+				case ADDITEM_BT_POSITION:
+					item=(Item *)malloc(sizeof(Item));
+					GetDlgItemText(hDlg,ADDITEM_ED_PATH,path,sizeof(path));
+					GetDlgItemText(hDlg,ADDITEM_ED_PARAM,param,sizeof(param));
+					*item=OpenItem(path,param);
+					break;
 			}
 			break;
 	}

@@ -292,6 +292,9 @@ void CheckVersion(){
 	}
 	char StopSpread(char *blockVar,List *list){
 		int i;
+		if(!blockVar){
+			return 0;
+		}
 		while(*blockVar){
 			if(*blockVar==-1){
 				FreeList(list);
@@ -489,6 +492,46 @@ void CheckVersion(){
 //	}
 //	return 1;
 //}
+Item OpenItem(char *path,char *param){
+	InitList(&list);
+	EnumWindows(SavePreWindows,(LPARAM)&list);
+	Item item;
+	char *name;
+	STRING str;
+	RECT rect;
+	
+	printf("path: %s\nparam: %s\n",path,param);
+	str=Split(path,'\\');
+	name=str.strings[str.size-1];
+	if(name[strlen(name)-1]=='\"'){
+		name[strlen(name)-1]=0;
+	}
+	printf("%s\n",str.strings[str.size-1]);
+	item=CreateItem(path,name,param,0,rect,0,1);
+	if(ExecuteProcess(item)){
+		printf("프로그램 실행 실패\n");
+	}
+	Sleep(200);
+	GetItemWinHandle(&item,NULL,&list);
+//	SetNowLog(GetString("finding %s",items[i].name));
+//	switch(GetItemWinHandle(&item,NULL,&list)){
+//		case 1:
+//			return -1;
+//		case FINDING_FAIL:
+////			SetNowLog(GetString("not found %s",items[i].name));
+////			if(!status[i]){
+////				status[i]=GetString("프로그램 감지 실패(timeout): %s\n",items[i].name);
+////			}
+//			break;
+//		default:
+////			SetNowLog(GetString("found %s",items[i].name));
+//			break;
+//	}
+	printf("%d\n",item.hWnd);
+	FreeList(&list);
+	DeleteString(&str);
+	return item;
+}
 char SpreadQuickslot(QuickSlot *pOriginSlot,int slotIndex,char *status[ITEM_MAXSIZE]){
 	int i;
 	QuickSlot slot=pOriginSlot[slotIndex];

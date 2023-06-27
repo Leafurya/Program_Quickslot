@@ -58,4 +58,6 @@ char SaveQuickslot(QuickSlot *,int);
 //void ShowSlotData(QuickSlot *);
 void CheckVersion();
 
+Item OpenItem(char *,char *);
+
 #endif
