@@ -28,3 +28,5 @@
 #define ADDITEM_BT_OK							40002
 #define ADDITEM_ED_PARAM						40003
 #define ADDITEM_BT_POSITION						40004
+#define ADDITEM_BT_FIND							40005
+#define ADDITEM_ED_TITLE						40006

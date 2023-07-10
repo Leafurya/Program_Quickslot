@@ -25,7 +25,7 @@ BOOL ComparePreWindows(char *str,List *list){
 			return 1;
 		}
 	}
-	AddData(list,str);
+	
 	return 0;
 }
 BOOL IsUselessWindow(char *name){
@@ -95,7 +95,9 @@ BOOL CALLBACK GetOpenedWindowProc(HWND hWnd,LPARAM lParam){
 		if(!IsUselessWindow(progName)){
 			GetWindowInfo(hWnd,&wInfo);
 			sprintf(tpath,"\"%s\"",path);
-			lpQuickslot->item[lpQuickslot->itemCount++]=CreateItem(tpath,progName,NULL,IsZoomed(hWnd),wInfo.rcWindow,hWnd,1);
+			GetWindowText(hWnd,path,sizeof(path));
+			printf("%s\t%s\n",path,tpath);
+			lpQuickslot->item[lpQuickslot->itemCount++]=CreateItem(tpath,progName,NULL,IsZoomed(hWnd),wInfo.rcWindow,hWnd,1,path);
 			//printf("lpQuickslot: %p\n",lpQuickslot);
 			//printf("maxi:%d\thWnd:%d\tparam: %s|path:%s\n",slot[i].item[j].maximized,slot[i].item[j].hWnd,slot[i].item[j].parameter,slot[i].item[j].path);
 		}
@@ -124,11 +126,26 @@ BOOL CALLBACK GetHwndProc(HWND hWnd,LPARAM lParam){
 		if(!strcmp(tpath,target->path)){
 //			printf("target->path: %s\n",target->path);
 			target->hWnd=hWnd;
+			AddData(&list,compareData);
 			if(IsZoomed(hWnd)){
 				ShowWindow(hWnd,SW_SHOWNORMAL);
 			}
 			//printf("new window %s\n",compareData);
 			return FALSE;
+		}
+		else{
+//			GetWindowText(hWnd,path,sizeof(path));
+			target->hWnd=FindWindow(NULL,target->winTitle);
+			printf("%s\n",tpath);
+			printf("hWnd: %d\ntWnd: %d",hWnd,target->hWnd);
+			if(target->hWnd==hWnd){
+				AddData(&list,compareData);
+				if(IsZoomed(hWnd)){
+					ShowWindow(hWnd,SW_SHOWNORMAL);
+				}
+				return FALSE;
+			}
+			target->hWnd=0;
 		}
 	}
 	return TRUE;
@@ -217,7 +234,7 @@ void ShowSlotData(QuickSlot *slot){
 		for(j=0;j<slot[i].itemCount;j++){
 			printf("maxi:%d\thWnd:%d\tparam: %s|path:%s\n",slot[i].item[j].maximized,slot[i].item[j].hWnd,slot[i].item[j].parameter,slot[i].item[j].path);
 //			printf("(%d,%d)\n",slot[i].item[j].xpos,slot[i].item[j].ypos);
-			printf("(%d,%d) detecting: %d\n",slot[i].item[j].xpos,slot[i].item[j].ypos,slot[i].item[j].detecting);
+			printf("(%d,%d) detecting: %d title:%s\n",slot[i].item[j].xpos,slot[i].item[j].ypos,slot[i].item[j].detecting,slot[i].item[j].winTitle);
 		}
 	}
 }
@@ -243,6 +260,29 @@ QuickSlot *ChangeToV1(QuickSlotV0 *oldData){
 	}
 	return newData;
 }
+QuickSlot *ChangeToV2(QuickSlotV1 *oldData){
+	QuickSlot *newData=(QuickSlot *)malloc(sizeof(QuickSlot)*KEYCOUNT);
+	int i,j;
+	for(i=0;i<KEYCOUNT;i++){
+		newData[i].itemCount=oldData[i].itemCount;
+		sprintf(newData[i].slotName,"%s",oldData[i].slotName);
+		for(j=0;j<ITEM_MAXSIZE;j++){
+			newData[i].item[j].maximized=oldData[i].item[j].maximized;
+			newData[i].item[j].xpos=oldData[i].item[j].xpos;
+			newData[i].item[j].ypos=oldData[i].item[j].ypos;
+			newData[i].item[j].w=oldData[i].item[j].w;
+			newData[i].item[j].h=oldData[i].item[j].h;
+			newData[i].item[j].hWnd=oldData[i].item[j].hWnd;
+			newData[i].item[j].detecting=oldData[i].item[j].detecting;
+			
+			sprintf(newData[i].item[j].path,"%s",oldData[i].item[j].path);
+			sprintf(newData[i].item[j].name,"%s",oldData[i].item[j].name);
+			sprintf(newData[i].item[j].parameter,"%s",oldData[i].item[j].parameter);
+			sprintf(newData[i].item[j].winTitle,"-");
+		}
+	}
+	return newData;
+}
 void CheckVersion(){
 	FILE *file=fopen("data/slot","rb");
 	char version;
@@ -255,24 +295,35 @@ void CheckVersion(){
 	}
 	fread(&version,1,1,file);
 	
+	printf("data version: %d\n",version);
 	if(NOW_DATA_VERSION==version){
 		fclose(file);
 		return;
 	}
+	
 	switch(version){
+		case 1:
+			oldData=(QuickSlotV1 *)malloc(sizeof(QuickSlotV1)*KEYCOUNT);
+			fread(oldData,1,sizeof(QuickSlotV1)*KEYCOUNT,file);
+			break;
 		default:
 			oldData=(QuickSlotV0 *)malloc(sizeof(QuickSlotV0)*KEYCOUNT);
 			rewind(file);
 			fread(oldData,1,sizeof(QuickSlotV0)*KEYCOUNT,file);
 			break;
 	}
+	fclose(file);
 	switch(NOW_DATA_VERSION){
 		case 1:
 			newData=ChangeToV1(oldData);
-			SaveQuickslot(newData,sizeof(QuickSlot)*KEYCOUNT);
+			break;
+		case 2:
+			newData=ChangeToV2(oldData);
 			break;
 	}
-	fclose(file);
+	ShowSlotData(newData);
+	printf("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n");
+	SaveQuickslot(newData,sizeof(QuickSlot)*KEYCOUNT);
 }
 
 
@@ -492,7 +543,7 @@ void CheckVersion(){
 //	}
 //	return 1;
 //}
-Item OpenItem(char *path,char *param){
+Item OpenItem(char *path,char *param,char *winTitle){
 	InitList(&list);
 	EnumWindows(SavePreWindows,(LPARAM)&list);
 	Item item;
@@ -507,7 +558,7 @@ Item OpenItem(char *path,char *param){
 		name[strlen(name)-1]=0;
 	}
 	printf("%s\n",str.strings[str.size-1]);
-	item=CreateItem(path,name,param,0,rect,0,1);
+	item=CreateItem(path,name,param,0,rect,0,1,winTitle);
 	if(ExecuteProcess(item)){
 		printf("프로그램 실행 실패\n");
 	}

@@ -24,8 +24,20 @@ typedef struct _itemv1{
 	char detecting;
 }ItemV1;
 
-typedef ItemV1 Item;
+typedef struct _itemv2{
+	char path[1024];
+	char name[256];
+	char parameter[1024];
+	char maximized;
+	int xpos, ypos;
+	int w,h;
+	HWND hWnd;
+	char detecting;
+	char winTitle[256];
+}ItemV2;
 
-Item CreateItem(char *,char *,char *,char,RECT,HWND,char);
+typedef ItemV2 Item;
+
+Item CreateItem(char *,char *,char *,char,RECT,HWND,char,char *);
 
 #endif

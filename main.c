@@ -1,3 +1,4 @@
+#include <shlobj.h>
 #include <windows.h>
 #include <doublebuffer.h> 
 #include <stdio.h>
@@ -8,6 +9,7 @@
 #include <dirent.h>
 #include <psapi.h>
 
+#include "data.h"
 #include "quickslot.h"
 #include "ctrls.h"
 #include "resource.h"
@@ -100,7 +102,8 @@ int APIENTRY WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance
 	if(!LoadQuickslot(&quickslot,sizeof(quickslot))){
 		memset(quickslot,0,sizeof(quickslot));
 	}
-//	ShowSlotData(quickslot);
+	ShowSlotData(quickslot);
+	quickslot[0].item[0].winTitle;
 	
 	hWnd=CreateWindow(mainWndClass,mainWndClass,WS_OVERLAPPEDWINDOW,
 		  0,0,mainWndW,mainWndH,//CW_USEDEFAULT,CW_USEDEFAULT
@@ -420,7 +423,7 @@ void SaveCtrlsCommandFunc(WPARAM wParam,LPARAM lParam){
 			}
 			break;
 		case SAVECTRLS_BT_ADDITEM:
-			if(DialogBox(g_hInst,MAKEINTRESOURCE(IDD_DIALOG_ADDITEM),mainWnd,(DLGPROC)AddItemDlgProc)==ID_BT_CANCLE){
+			if(DialogBox(g_hInst,MAKEINTRESOURCE(IDD_DIALOG_ADDITEM),mainWnd,(DLGPROC)AddItemDlgProc)==ADDITEM_BT_CANCLE){
 				break;
 			}
 			if(!saving){
@@ -470,11 +473,15 @@ BOOL CALLBACK ModiDlgProc(HWND hDlg,UINT iMessage,WPARAM wParam,LPARAM lParam){
 BOOL CALLBACK AddItemDlgProc(HWND hDlg,UINT iMessage,WPARAM wParam,LPARAM lParam){
 	char path[1024];
 	char param[1024];
+	char winTitle[256];
 	char *name;
 	RECT rect={0,0,0,0};
 	static Item *item=NULL;
 	
 	STRING str;
+	
+	char lpstrFile[MAX_PATH]="";
+	OPENFILENAME OFN;
 	
 	switch(iMessage){
 		case WM_INITDIALOG:
@@ -482,6 +489,7 @@ BOOL CALLBACK AddItemDlgProc(HWND hDlg,UINT iMessage,WPARAM wParam,LPARAM lParam
 			SetDlgItemText(hDlg,ADDITEM_ED_PARAM,0);
 			break;
 		case WM_COMMAND:
+//			printf("%d %d\n",HIWORD(wParam),LOWORD(wParam));
 			switch(wParam){
 				case ADDITEM_BT_CANCLE:
 					if(item){
@@ -497,19 +505,20 @@ BOOL CALLBACK AddItemDlgProc(HWND hDlg,UINT iMessage,WPARAM wParam,LPARAM lParam
 					}
 					if(item){
 						GetWindowRect(item->hWnd,&rect);
-						nowSlot->item[nowSlot->itemCount++]=CreateItem(item->path,item->name,item->parameter,IsZoomed(item->hWnd),rect,0,1);
+						nowSlot->item[nowSlot->itemCount++]=CreateItem(item->path,item->name,item->parameter,IsZoomed(item->hWnd),rect,0,1,item->winTitle);
 						free(item);
 					}
 					else{
 						GetDlgItemText(hDlg,ADDITEM_ED_PATH,path,sizeof(path));
 						GetDlgItemText(hDlg,ADDITEM_ED_PARAM,param,sizeof(param));
+						GetDlgItemText(hDlg,ADDITEM_ED_TITLE,winTitle,sizeof(winTitle));
 						str=Split(path,'\\');
 						name=str.strings[str.size-1];
 						if(name[strlen(name)-1]=='\"'){
 							name[strlen(name)-1]=0;
 						}
 						
-						nowSlot->item[nowSlot->itemCount++]=CreateItem(item->path,name,item->parameter,0,rect,0,0);
+						nowSlot->item[nowSlot->itemCount++]=CreateItem(item->path,name,item->parameter,0,rect,0,0,winTitle);
 						
 						DeleteString(&str);
 					}
@@ -519,7 +528,27 @@ BOOL CALLBACK AddItemDlgProc(HWND hDlg,UINT iMessage,WPARAM wParam,LPARAM lParam
 					item=(Item *)malloc(sizeof(Item));
 					GetDlgItemText(hDlg,ADDITEM_ED_PATH,path,sizeof(path));
 					GetDlgItemText(hDlg,ADDITEM_ED_PARAM,param,sizeof(param));
-					*item=OpenItem(path,param);
+					GetDlgItemText(hDlg,ADDITEM_ED_TITLE,winTitle,sizeof(winTitle));
+					*item=OpenItem(path,param,winTitle);
+					if(!item->hWnd){
+						free(item);
+						item=NULL;
+					}
+					break;
+				case ADDITEM_BT_FIND:
+					memset(&OFN, 0, sizeof(OPENFILENAME));
+					OFN.lStructSize = sizeof(OPENFILENAME);
+					OFN.hwndOwner=mainWnd;
+					OFN.lpstrFilter="";
+					OFN.lpstrFile=lpstrFile;
+					OFN.nMaxFile=256;
+					OFN.lpstrInitialDir="c:\\";
+					OFN.Flags=OFN_NOCHANGEDIR;
+					if (GetOpenFileName(&OFN)!=0) {
+//						sprintf(prgData.editor,"%s",OFN.lpstrFile);
+						SetDlgItemText(hDlg,ADDITEM_ED_PATH,OFN.lpstrFile);
+//						SetWindowText(mc.edEditorPath,OFN.lpstrFile);
+					}
 					break;
 			}
 			break;

@@ -190,16 +190,6 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit16]
-FileName=res\resource.h
-CompileCpp=0
-Folder=
-Compile=1
-Link=1
-Priority=1000
-OverrideBuildCmd=0
-BuildCmd=
-
 [Unit8]
 FileName=trayicon.h
 CompileCpp=0
@@ -211,6 +201,16 @@ OverrideBuildCmd=0
 BuildCmd=
 
 [Unit17]
+FileName=res\resource.h
+Folder=
+Compile=1
+Link=1
+Priority=1000
+OverrideBuildCmd=0
+BuildCmd=
+CompileCpp=0
+
+[Unit16]
 FileName=res\resource.rc
 Folder=Resources
 Compile=1
