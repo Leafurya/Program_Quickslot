@@ -40,24 +40,34 @@ void CreateSaveCtrls(void *ctrls,HWND hWnd,HINSTANCE hInst){
 void MoveSaveCtrls(void *ctrls,RECT rect){
 	int i;
 	SaveCtrls *c=(SaveCtrls *)ctrls;
-	int btW=(int)(rect.right/FKEYCOUNT);
 	int btH=25;//50
 	int x=0;
 	int underBtW=(int)(rect.right/3),underBtH=40,underBtY=rect.bottom-underBtH;
-	int liW=200,liH=rect.bottom-btH-underBtH;
-	int cbW=80,cbH=40;
+	int liW=rect.right,liH=(int)((rect.bottom-btH-underBtH)*0.6);
+	int cbW=80,cbH=20;
 	
 	int margin=20;
-	int stW=rect.right-liW-(margin*2), stH=liH-(margin*2)-cbH;
-	int stX=liW+margin, stY=margin+cbH;
+	
+	RECT infoArea={
+		margin,
+		btH+liH+margin,
+		rect.right-margin,
+		rect.bottom-margin-underBtH-liH-btH-margin
+	};
+	int stW=infoArea.right, stH=infoArea.bottom-cbH;
+	int stY=infoArea.top+cbH+10;
 	
 //	for(i=0;i<FKEYCOUNT;i++,x+=btW){
 //		MoveWindow(c->btSlot[i],x,0,btW,btH,TRUE);
 //	}
 	MoveWindow(c->btAddItem,0,0,liW,btH,TRUE); 
 	MoveWindow(c->liItems,0,btH,liW,liH,TRUE);
-	MoveWindow(c->cbDetecting,stX,margin,cbW,cbH,TRUE);
-	MoveWindow(c->stInfo,stX,stY,stW,stH,FALSE);
+	
+	MoveWindow(c->cbDetecting,infoArea.left,infoArea.top,cbW,cbH,TRUE);
+	MoveWindow(c->stInfo,infoArea.left,stY,stW,stH,FALSE);
+	
+//	MoveWindow(c->cbDetecting,stX,stY,cbW,cbH,TRUE);
+//	MoveWindow(c->stInfo,stX,stY,stW,stH,FALSE);
 	
 	x=0;
 	MoveWindow(c->btSave,x,underBtY,underBtW,underBtH,TRUE);

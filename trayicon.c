@@ -55,6 +55,7 @@ HMENU CreateTrayMenu(QuickSlot *slot,HMENU *slotMenu){
 		}
 		
 		sprintf(str,"F%d %s\0",i+1,strlen(slot[i].slotName)?slot[i].slotName:"ºó½½·Ô");
+		printf("tray slot name: %s\n",str);
 		AppendMenu(main,MF_POPUP|(opened?MF_CHECKED:MF_UNCHECKED),(UINT_PTR)slotMenu[i],str);
 	}
 	

@@ -130,6 +130,7 @@ BOOL CALLBACK GetHwndProc(HWND hWnd,LPARAM lParam){
 			if(IsZoomed(hWnd)){
 				ShowWindow(hWnd,SW_SHOWNORMAL);
 			}
+			printf("find by path: %d\n",hWnd);
 			//printf("new window %s\n",compareData);
 			return FALSE;
 		}
@@ -137,12 +138,13 @@ BOOL CALLBACK GetHwndProc(HWND hWnd,LPARAM lParam){
 //			GetWindowText(hWnd,path,sizeof(path));
 			target->hWnd=FindWindow(NULL,target->winTitle);
 			printf("%s\n",tpath);
-			printf("hWnd: %d\ntWnd: %d",hWnd,target->hWnd);
+			printf("hWnd: %d\ntWnd: %d\n",hWnd,target->hWnd);
 			if(target->hWnd==hWnd){
 				AddData(&list,compareData);
 				if(IsZoomed(hWnd)){
 					ShowWindow(hWnd,SW_SHOWNORMAL);
 				}
+				printf("find by title: %d\n",hWnd);
 				return FALSE;
 			}
 			target->hWnd=0;
@@ -650,12 +652,14 @@ char SpreadQuickslot(QuickSlot *pOriginSlot,int slotIndex,char *status[ITEM_MAXS
 void ShowItemList(Item *item,int itemCount,HWND list){
 	int i;
 	int listCount=SendMessage(list,LB_GETCOUNT,0,0);
+	char str[1024]={0};
 	
 	for(i=listCount;i>=0;i--){
 		SendMessage(list,LB_DELETESTRING,i,0);
 	}
 	for(i=0;i<itemCount;i++){
-		SendMessage(list,LB_ADDSTRING,0,(LPARAM)item[i].name);
+		sprintf(str,"(%s)%s\0",item[i].name,item[i].winTitle);
+		SendMessage(list,LB_ADDSTRING,0,(LPARAM)str);
 		//printf("item[i].name: %s\n",item[i].name);
 	}
 	
