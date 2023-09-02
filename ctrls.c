@@ -43,7 +43,7 @@ void MoveSaveCtrls(void *ctrls,RECT rect){
 	int btH=25;//50
 	int x=0;
 	int underBtW=(int)(rect.right/3),underBtH=40,underBtY=rect.bottom-underBtH;
-	int liW=rect.right,liH=(int)((rect.bottom-btH-underBtH)*0.6);
+	int liW=rect.right,liH=(int)((rect.bottom-btH-underBtH)*0.5);
 	int cbW=80,cbH=20;
 	
 	int margin=20;

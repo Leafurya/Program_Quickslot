@@ -9,6 +9,7 @@
 #include "list.h"
 #include "progressbar.h"
 #include "thread.h"
+#include "log.h"
 
 QuickSlot *originSlotAdr;
 List list;
@@ -96,7 +97,7 @@ BOOL CALLBACK GetOpenedWindowProc(HWND hWnd,LPARAM lParam){
 			GetWindowInfo(hWnd,&wInfo);
 			sprintf(tpath,"\"%s\"",path);
 			GetWindowText(hWnd,path,sizeof(path));
-			printf("%s\t%s\n",path,tpath);
+//			printf("%s\t%s\n",path,tpath);
 			lpQuickslot->item[lpQuickslot->itemCount++]=CreateItem(tpath,progName,NULL,IsZoomed(hWnd),wInfo.rcWindow,hWnd,1,path);
 			//printf("lpQuickslot: %p\n",lpQuickslot);
 			//printf("maxi:%d\thWnd:%d\tparam: %s|path:%s\n",slot[i].item[j].maximized,slot[i].item[j].hWnd,slot[i].item[j].parameter,slot[i].item[j].path);
@@ -130,21 +131,21 @@ BOOL CALLBACK GetHwndProc(HWND hWnd,LPARAM lParam){
 			if(IsZoomed(hWnd)){
 				ShowWindow(hWnd,SW_SHOWNORMAL);
 			}
-			printf("find by path: %d\n",hWnd);
+//			printf("find by path: %d\n",hWnd);
 			//printf("new window %s\n",compareData);
 			return FALSE;
 		}
 		else{
 //			GetWindowText(hWnd,path,sizeof(path));
 			target->hWnd=FindWindow(NULL,target->winTitle);
-			printf("%s\n",tpath);
-			printf("hWnd: %d\ntWnd: %d\n",hWnd,target->hWnd);
+//			printf("%s\n",tpath);
+//			printf("hWnd: %d\ntWnd: %d\n",hWnd,target->hWnd);
 			if(target->hWnd==hWnd){
 				AddData(&list,compareData);
 				if(IsZoomed(hWnd)){
 					ShowWindow(hWnd,SW_SHOWNORMAL);
 				}
-				printf("find by title: %d\n",hWnd);
+//				printf("find by title: %d\n",hWnd);
 				return FALSE;
 			}
 			target->hWnd=0;
@@ -280,7 +281,7 @@ QuickSlot *ChangeToV2(QuickSlotV1 *oldData){
 			sprintf(newData[i].item[j].path,"%s",oldData[i].item[j].path);
 			sprintf(newData[i].item[j].name,"%s",oldData[i].item[j].name);
 			sprintf(newData[i].item[j].parameter,"%s",oldData[i].item[j].parameter);
-			sprintf(newData[i].item[j].winTitle,"-");
+			sprintf(newData[i].item[j].winTitle,"");
 		}
 	}
 	return newData;
@@ -288,6 +289,7 @@ QuickSlot *ChangeToV2(QuickSlotV1 *oldData){
 void CheckVersion(){
 	FILE *file=fopen("data/slot","rb");
 	char version;
+	char tVer;
 	void *oldData;
 	QuickSlot *newData;
 	int i,j;
@@ -297,12 +299,11 @@ void CheckVersion(){
 	}
 	fread(&version,1,1,file);
 	
-	printf("data version: %d\n",version);
+//	printf("data version: %d\n",version);
 	if(NOW_DATA_VERSION==version){
 		fclose(file);
 		return;
 	}
-	
 	switch(version){
 		case 1:
 			oldData=(QuickSlotV1 *)malloc(sizeof(QuickSlotV1)*KEYCOUNT);
@@ -315,17 +316,50 @@ void CheckVersion(){
 			break;
 	}
 	fclose(file);
-	switch(NOW_DATA_VERSION){
-		case 1:
-			newData=ChangeToV1(oldData);
-			break;
-		case 2:
-			newData=ChangeToV2(oldData);
-			break;
+	
+	for(tVer=version;NOW_DATA_VERSION!=tVer;){
+		tVer++;
+		switch(tVer){
+			case 1:
+				newData=ChangeToV1(oldData);
+//				LogMessage(GetString("데이터 버전 업데이트(V%d -> V1)",version));
+				break;
+			case 2:
+				newData=ChangeToV2(oldData);
+//				LogMessage(GetString("데이터 버전 업데이트(V%d -> V2)",version));
+				break;
+		}
+		free(oldData);
+		oldData=newData;
 	}
-	ShowSlotData(newData);
-	printf("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n");
+//	switch(version){
+//		case 1:
+//			oldData=(QuickSlotV1 *)malloc(sizeof(QuickSlotV1)*KEYCOUNT);
+//			fread(oldData,1,sizeof(QuickSlotV1)*KEYCOUNT,file);
+//			break;
+//		default:
+//			oldData=(QuickSlotV0 *)malloc(sizeof(QuickSlotV0)*KEYCOUNT);
+//			rewind(file);
+//			fread(oldData,1,sizeof(QuickSlotV0)*KEYCOUNT,file);
+//			break;
+//	}
+//	fclose(file);
+//	switch(NOW_DATA_VERSION){
+//		case 1:
+//			newData=ChangeToV1(oldData);
+//			LogMessage(GetString("데이터 버전 업데이트(V%d -> V1)",version));
+//			break;
+//		case 2:
+//			newData=ChangeToV2(oldData);
+//			LogMessage(GetString("데이터 버전 업데이트(V%d -> V2)",version));
+//			break;
+//	}
+	LogMessage(GetString("데이터 버전 업데이트(V%d -> V%d)",version,tVer));
+	SaveLog();
+//	ShowSlotData(newData);
+//	printf("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n");
 	SaveQuickslot(newData,sizeof(QuickSlot)*KEYCOUNT);
+	free(newData);
 }
 
 
@@ -350,6 +384,7 @@ void CheckVersion(){
 		}
 		while(*blockVar){
 			if(*blockVar==-1){
+				LogMessage(GetString("작업 중단"));
 				FreeList(list);
 //				printf("stop thread\n");
 				return 1;
@@ -358,6 +393,7 @@ void CheckVersion(){
 		return 0;
 	}
 	char ExecuteProcess(Item item){
+//		LogMessage(GetString("프로그램 실행 중(%s)",item.winTitle));
 		HANDLE target;
 		int timeout=0;
 		
@@ -371,17 +407,18 @@ void CheckVersion(){
 		seinfo.fMask=SEE_MASK_NOCLOSEPROCESS;
 		
 		if(!ShellExecuteEx(&seinfo)){
-			printf("error: %d\n",GetLastError());
+//			printf("error: %d\n",GetLastError());
+			LogMessage(GetString("프로그램 실행 실패(%s)|%s",item.winTitle,strerror(errno)));
 			return EXECUTE_FAIL;
 		}
-		
+		LogMessage(GetString("프로그램 실행 성공(%s)",item.winTitle));
 		CloseHandle(seinfo.hProcess);
 		return 0;
 	}
 	char GetItemWinHandle(Item *item,char *blockVar,List *list){
 		int timeout=0;
 		clock_t start,end;
-		
+//		LogMessage(GetString("프로그램 감지 중(%s)",item->winTitle));
 		do{
 //			printf("finding %d %s\n",item->hWnd,item->path);
 			if(StopSpread(blockVar,list)){
@@ -392,6 +429,7 @@ void CheckVersion(){
 //			printf("1\n");
 			if(timeout>=700){
 //				printf("not found %s\n",item->name);
+				LogMessage(GetString("프로그램 감지 실패(%s)|timeout",item->winTitle));
 				item->hWnd=0;
 				return FINDING_FAIL;
 			}
@@ -400,6 +438,10 @@ void CheckVersion(){
 //			printf("3\n");
 			Sleep(1);
 		}while(!item->hWnd);
+		if(!strlen(item->winTitle)){
+			GetWindowText(item->hWnd,item->winTitle,sizeof(item->winTitle));
+		}
+		LogMessage(GetString("프로그램 감지 성공(%s)",item->winTitle));
 //		printf("found %s\n",item->name);
 		return 0;
 	}
@@ -407,9 +449,11 @@ void CheckVersion(){
 		if(StopSpread(blockVar,list)){
 			return 1;
 		}
+//		LogMessage(GetString("프로그램 배치 중(%s)",item.winTitle));
 		//printf("%d%s\n",items[i].hWnd,items[i].path);
 		if(item.hWnd){
 			if(!MoveWindow(item.hWnd,item.xpos,item.ypos<0?100:item.ypos,item.w,item.h,TRUE)){
+				LogMessage(GetString("프로그램 배치 실패(%s)",item.winTitle));
 				return -1;
 			}
 			ShowWindow(item.hWnd,SW_NORMAL);
@@ -417,6 +461,7 @@ void CheckVersion(){
 				ShowWindow(item.hWnd,SW_SHOWMAXIMIZED);
 			}
 		}
+		LogMessage(GetString("프로그램 배치 성공(%s)|X%d Y%d W%d H%d",item.winTitle,item.xpos,item.ypos,item.w,item.h));
 		//printf("move %d %s %s\n",item.hWnd,item.path,item.parameter);
 		
 //		Sleep(100);
@@ -553,16 +598,16 @@ Item OpenItem(char *path,char *param,char *winTitle){
 	STRING str;
 	RECT rect;
 	
-	printf("path: %s\nparam: %s\n",path,param);
+//	printf("path: %s\nparam: %s\n",path,param);
 	str=Split(path,'\\');
 	name=str.strings[str.size-1];
 	if(name[strlen(name)-1]=='\"'){
 		name[strlen(name)-1]=0;
 	}
-	printf("%s\n",str.strings[str.size-1]);
+//	printf("%s\n",str.strings[str.size-1]);
 	item=CreateItem(path,name,param,0,rect,0,1,winTitle);
 	if(ExecuteProcess(item)){
-		printf("프로그램 실행 실패\n");
+//		printf("프로그램 실행 실패\n");
 	}
 	Sleep(200);
 	GetItemWinHandle(&item,NULL,&list);
@@ -580,7 +625,7 @@ Item OpenItem(char *path,char *param,char *winTitle){
 ////			SetNowLog(GetString("found %s",items[i].name));
 //			break;
 //	}
-	printf("%d\n",item.hWnd);
+//	printf("%d\n",item.hWnd);
 	FreeList(&list);
 	DeleteString(&str);
 	return item;
@@ -606,37 +651,41 @@ char SpreadQuickslot(QuickSlot *pOriginSlot,int slotIndex,char *status[ITEM_MAXS
 			}
 			items[i].hWnd=0;
 			
-			SetNowLog(GetString("execute %s",items[i].name));
+//			SetNowLog(GetString("execute %s",items[i].name));
 			if(ExecuteProcess(items[i])){
 				status[i]=GetString("프로그램 실행 실패: %s\n",items[i].name);
 			}
 			if(items[i].detecting){
 				Sleep(200);
-				SetNowLog(GetString("finding %s",items[i].name));
+//				SetNowLog(GetString("finding %s",items[i].name));
+//				LogMessage(GetString("프로그램 감지 중(%s)",items[i].winTitle));
 				switch(GetItemWinHandle(&items[i],&blockVar,&list)){
 					case 1:
 						return -1;
 					case FINDING_FAIL:
-						SetNowLog(GetString("not found %s",items[i].name));
+//						LogMessage(GetString("프로그램 감지 실패(%s)|timeout",items[i].winTitle));
+//						SetNowLog(GetString("not found %s",items[i].name));
 						if(!status[i]){
 							status[i]=GetString("프로그램 감지 실패(timeout): %s\n",items[i].name);
 						}
 						break;
-					default:
-						SetNowLog(GetString("found %s",items[i].name));
-						break;
 				}
+				
+			}
+			else{
+				LogMessage(GetString("프로그램 감지 안함(%s)",items[i].winTitle));
 			}
 			StepBar();
 		}
 		for(i=0;i<slot.itemCount;i++){
-			SetNowLog(GetString("move %s",items[i].name));
+//			SetNowLog(GetString("move %s",items[i].name));
 			switch(MoveItemWindow(items[i],&blockVar,&list)){
 				case 1:
 					return -1;
 				case -1:
+//					LogMessage(GetString("프로그램 배치 실패(%s)",items[i].winTitle);
 					if(!status[i]){
-						status[i]=GetString("프로그램 재배치 실패: %s\n",items[i].name);
+						status[i]=GetString("프로그램 배치 실패: %s\n",items[i].name);
 					}
 					break;
 			}
