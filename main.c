@@ -95,10 +95,10 @@ int APIENTRY WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance
 	WndClass.style=CS_HREDRAW | CS_VREDRAW;
 	RegisterClass(&WndClass);
 
-	AllocConsole(); 
-	freopen("COIN$", "r", stdin);
-	freopen("CONOUT$", "w", stdout);
-	freopen("CONOUT$", "w", stderr); 
+//	AllocConsole(); 
+//	freopen("COIN$", "r", stdin);
+//	freopen("CONOUT$", "w", stdout);
+//	freopen("CONOUT$", "w", stderr); 
 	
 	if(!opendir("./data")){
 		mkdir("./data");
@@ -107,7 +107,7 @@ int APIENTRY WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance
 	if(!LoadQuickslot(&quickslot,sizeof(quickslot))){
 		memset(quickslot,0,sizeof(quickslot));
 	}
-	ShowSlotData(quickslot);
+//	ShowSlotData(quickslot);
 //	quickslot[0].item[0].winTitle;
 	
 	hWnd=CreateWindow(mainWndClass,mainWndClass,WS_OVERLAPPEDWINDOW,
@@ -123,7 +123,7 @@ int APIENTRY WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance
 		}
 	}
 
-	FreeConsole();
+//	FreeConsole();
 
 	return Message.wParam;
 }
@@ -520,16 +520,15 @@ BOOL CALLBACK AddItemDlgProc(HWND hDlg,UINT iMessage,WPARAM wParam,LPARAM lParam
 					EndDialog(hDlg,wParam);
 					return TRUE;
 				case ADDITEM_BT_OK:
-//					if(!item){
-//						if(MessageBox(hDlg,"위치 지정 없이 저장하겠습니까?","알림",MB_YESNO)==IDNO){
-//							break;
-//						}
-//					}
-//					printf("targetWnd:%d\n",targetWnd);
-//						GetWindowRect(item->hWnd,&rect);
-//						nowSlot->item[nowSlot->itemCount++]=CreateItem(item->path,item->name,item->parameter,IsZoomed(item->hWnd),rect,0,1,item->winTitle);
-//						free(item);
+					GetDlgItemText(hDlg,ADDITEM_ED_PATH,path,sizeof(path));
+					GetDlgItemText(hDlg,ADDITEM_ED_PARAM,param,sizeof(param));
 					GetDlgItemText(hDlg,ADDITEM_ED_TITLE,winTitle,sizeof(winTitle));
+					
+					if(!strlen(path)){
+						MessageBox(hDlg,"지정된 프로그램이 없습니다.","알림",MB_OK);
+						break;
+					}
+					
 					targetWnd=FindWindow(NULL,winTitle);
 					
 					if(!targetWnd){
@@ -539,9 +538,7 @@ BOOL CALLBACK AddItemDlgProc(HWND hDlg,UINT iMessage,WPARAM wParam,LPARAM lParam
 						}
 					}
 					GetWindowRect(targetWnd,&rect);
-					GetDlgItemText(hDlg,ADDITEM_ED_PATH,path,sizeof(path));
-					GetDlgItemText(hDlg,ADDITEM_ED_PARAM,param,sizeof(param));
-					GetDlgItemText(hDlg,ADDITEM_ED_TITLE,winTitle,sizeof(winTitle));
+					
 					str=Split(path,'\\');
 					name=str.strings[str.size-1];
 					if(name[strlen(name)-1]=='\"'){
@@ -549,37 +546,9 @@ BOOL CALLBACK AddItemDlgProc(HWND hDlg,UINT iMessage,WPARAM wParam,LPARAM lParam
 					}
 					nowSlot->item[nowSlot->itemCount++]=CreateItem(path,name,param,0,rect,0,1,winTitle);
 					DeleteString(&str);
-//					else{
-//						
-//						GetDlgItemText(hDlg,ADDITEM_ED_PATH,path,sizeof(path));
-//						GetDlgItemText(hDlg,ADDITEM_ED_PARAM,param,sizeof(param));
-//						GetDlgItemText(hDlg,ADDITEM_ED_TITLE,winTitle,sizeof(winTitle));
-//						str=Split(path,'\\');
-//						name=str.strings[str.size-1];
-//						if(name[strlen(name)-1]=='\"'){
-//							name[strlen(name)-1]=0;
-//						}
-//						
-//						nowSlot->item[nowSlot->itemCount++]=CreateItem(item->path,name,item->parameter,0,rect,0,0,winTitle);
-//						
-//						DeleteString(&str);
-//					}
 					*hAddItemDlg=0;
 					EndDialog(hDlg,wParam);
 					return TRUE;
-//				case ADDITEM_BT_POSITION:
-//					if(!item){
-//						item=(Item *)malloc(sizeof(Item));
-//					}
-//					GetDlgItemText(hDlg,ADDITEM_ED_PATH,path,sizeof(path));
-//					GetDlgItemText(hDlg,ADDITEM_ED_PARAM,param,sizeof(param));
-//					GetDlgItemText(hDlg,ADDITEM_ED_TITLE,winTitle,sizeof(winTitle));
-//					*item=OpenItem(path,param,winTitle);
-//					if(!item->hWnd){
-//						free(item);
-//						item=NULL;
-//					}
-//					break;
 				case ADDITEM_BT_FIND:
 					memset(&OFN, 0, sizeof(OPENFILENAME));
 					OFN.lStructSize = sizeof(OPENFILENAME);
