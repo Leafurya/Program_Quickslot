@@ -58,6 +58,9 @@ void *RemoveData(List *list,int index){
 	list->cur->next=list->cur->next->next;
 	free(target);
 	
+	if(!list->cur->next){
+		list->tail=list->cur;
+	}
 	return data;
 }
 char FindData(List *list,void *data,char (*Compare)(void *data1,void *data2)){

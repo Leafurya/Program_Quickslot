@@ -320,6 +320,7 @@ void SaveCtrlsCommandFunc(WPARAM wParam,LPARAM lParam){
 	int i;
 	char msgString[256];
 	char reList=1;
+	WINDOWINFO winPos;
 	switch(LOWORD(wParam)){
 		case SAVECTRLS_LI_ITEMS:
 			switch(HIWORD(wParam)){
@@ -356,6 +357,14 @@ void SaveCtrlsCommandFunc(WPARAM wParam,LPARAM lParam){
 				break;
 			}
 			for(i=0;i<slotForFinding.itemCount;i++){
+				if(slotForFinding.item[i].hWnd){
+					GetWindowInfo(slotForFinding.item[i].hWnd,&winPos);
+					slotForFinding.item[i].xpos=winPos.rcWindow.left;
+					slotForFinding.item[i].ypos=winPos.rcWindow.top;
+					slotForFinding.item[i].w=winPos.rcWindow.right-winPos.rcWindow.left;
+					slotForFinding.item[i].h=winPos.rcWindow.bottom-winPos.rcWindow.top;
+					printf("%d %d %d %d\n",slotForFinding.item[i].xpos,slotForFinding.item[i].ypos,slotForFinding.item[i].w,slotForFinding.item[i].h);
+				}
 				quickslot[nowSlotIndex].item[i]=slotForFinding.item[i];
 			}
 			quickslot[nowSlotIndex].itemCount=slotForFinding.itemCount;
@@ -752,6 +761,8 @@ unsigned __stdcall KeyInputThreadFunc(void *args){
 	char text[256]={0};
 	HWND targetWnd;
 	char path[1024]={0};
+	WINDOWINFO info;
+	RECT winPos;
 	
 	while(threadKiller){
 		if(IsWindow(hPbDlg)){
@@ -764,7 +775,9 @@ unsigned __stdcall KeyInputThreadFunc(void *args){
 				GetProcessPath(path,targetWnd);
 	//			printf("title:%s\npath:%s\n",text,path);
 				SendMessage(*hAddItemDlg,DLGM_SELWINDOW,(WPARAM)targetWnd,0);
-				
+//				GetWindowInfo(targetWnd,&info);
+				GetWindowRect(targetWnd,&winPos);
+				printf("%d %d %d %d\n",winPos.left,winPos.top,winPos.right,winPos.bottom);
 			}
 		}
 		if((index=GetSlotIndex())!=-1){

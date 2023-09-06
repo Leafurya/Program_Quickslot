@@ -21,7 +21,7 @@ unsigned __stdcall LogThreadFunc(void *args){
 	ReturnToHead(msgList);
 	while(MoveNext(msgList)){
 		fseek(file,0,SEEK_SET);
-		message=(char *)RemoveData(msgList,0);;
+		message=(char *)RemoveData(msgList,0);
 		
 		fwrite(message,strlen(message),1,file);
 //		RemoveData(msgList,0);
@@ -50,6 +50,8 @@ void LogMessage(char *msg){
 //	free(msg);
 }
 void SaveLog(){
+	printf("savelog\n");
+	ShowAllData(msgList);
 	StartThread(LogThreadFunc,NULL);
 }
 void EndLogging(){

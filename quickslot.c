@@ -446,13 +446,16 @@ void CheckVersion(){
 		return 0;
 	}
 	char MoveItemWindow(Item item,char *blockVar,List *list){
+		RECT pos;
+		char posError;
 		if(StopSpread(blockVar,list)){
 			return 1;
 		}
 //		LogMessage(GetString("프로그램 배치 중(%s)",item.winTitle));
 		//printf("%d%s\n",items[i].hWnd,items[i].path);
 		if(item.hWnd){
-			if(!MoveWindow(item.hWnd,item.xpos,item.ypos<0?100:item.ypos,item.w,item.h,TRUE)){
+//			printf("start x%d, y:%d\n",item.xpos,item.ypos,item.w,item.h);
+			if(!MoveWindow(item.hWnd,item.xpos,item.ypos,item.w,item.h,FALSE)){
 				LogMessage(GetString("프로그램 배치 실패(%s)",item.winTitle));
 				return -1;
 			}
@@ -460,8 +463,8 @@ void CheckVersion(){
 			if(item.maximized){
 				ShowWindow(item.hWnd,SW_SHOWMAXIMIZED);
 			}
+			LogMessage(GetString("프로그램 배치 성공(%s)|X%d Y%d W%d H%d",item.winTitle,item.xpos,item.ypos,item.w,item.h));
 		}
-		LogMessage(GetString("프로그램 배치 성공(%s)|X%d Y%d W%d H%d",item.winTitle,item.xpos,item.ypos,item.w,item.h));
 		//printf("move %d %s %s\n",item.hWnd,item.path,item.parameter);
 		
 //		Sleep(100);
@@ -689,6 +692,7 @@ char SpreadQuickslot(QuickSlot *pOriginSlot,int slotIndex,char *status[ITEM_MAXS
 					}
 					break;
 			}
+			Sleep(10);
 			StepBar();
 		}
 		memcpy(pOriginSlot[slotIndex].item,items,sizeof(pOriginSlot[slotIndex].item));
