@@ -375,6 +375,7 @@ void SaveCtrlsCommandFunc(WPARAM wParam,LPARAM lParam){
 			ShowItemInfo(quickslot[nowSlotIndex].slotName,NULL,sc.stInfo,sc.cbDetecting);
 			SendMessage(mainWnd,WM_CHANGECTRLS,PROP_CTRL,0);
 			saving=0;
+			StartThread(ObserveSlotThreadFunc,&quickslot[nowSlotIndex]);
 			//ShowSlotData(quickslot);
 			break;
 		case SAVECTRLS_BT_CHANGE:
@@ -505,6 +506,7 @@ BOOL CALLBACK AddItemDlgProc(HWND hDlg,UINT iMessage,WPARAM wParam,LPARAM lParam
 	char *name;
 	RECT rect={0,0,0,0};
 	static Item *item=NULL;
+	int i;
 	
 	STRING str;
 	
@@ -553,7 +555,15 @@ BOOL CALLBACK AddItemDlgProc(HWND hDlg,UINT iMessage,WPARAM wParam,LPARAM lParam
 					if(name[strlen(name)-1]=='\"'){
 						name[strlen(name)-1]=0;
 					}
-					nowSlot->item[nowSlot->itemCount++]=CreateItem(path,name,param,0,rect,0,1,winTitle);
+//					nowSlot->item[nowSlot->itemCount]=CreateItem(path,name,param,0,rect,0,1,winTitle);
+					
+					if(IsSlotOpened(*nowSlot)){
+						nowSlot->item[nowSlot->itemCount++]=CreateItem(path,name,param,0,rect,targetWnd,1,winTitle);
+					}
+					else{
+						nowSlot->item[nowSlot->itemCount++]=CreateItem(path,name,param,0,rect,0,1,winTitle);
+					}
+					
 					DeleteString(&str);
 					*hAddItemDlg=0;
 					EndDialog(hDlg,wParam);
@@ -821,6 +831,6 @@ unsigned __stdcall ObserveSlotThreadFunc(void *args){
 		if(i==slot->itemCount){
 			return 0;
 		}
-		Sleep(1);
+		Sleep(100);
 	}
 }

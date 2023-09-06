@@ -1,0 +1,7 @@
+
+
+[1970-01-01 09:00:00] Client version: no bootstrapper found
+[1970-01-01 09:00:00] Startup - webhelper launched with: "E:\steam\bin\cef\cef.win7x64\steamwebhelper.exe"
+[1970-01-01 09:00:00] Browser - launching child process with: "E:\steam\bin\cef\cef.win7x64\steamwebhelper.exe" --type=gpu-process --field-trial-handle=1548,12844185525726416292,13895313278188952831,131072 --enable-features=CastMediaRouteProvider --log-file="E:\steam\bin\cef\cef.win7x64\debug.log" --product-version="Valve Steam Client" --lang=ko-KR /prefetch:2
+[2023-09-07 02:10:49] Browser - launching child process with: "E:\steam\bin\cef\cef.win7x64\steamwebhelper.exe" --type=utility --utility-sub-type=network.mojom.NetworkService --field-trial-handle=1548,12844185525726416292,13895313278188952831,131072 --enable-features=CastMediaRouteProvider --lang=ko --service-sandbox-type=network --log-file="E:\steam\bin\cef\cef.win7x64\debug.log" --product-version="Valve Steam Client" --lang=ko-KR /prefetch:8
+[2023-09-07 02:10:49] Browser - launching child process with: "E:\steam\bin\cef\cef.win7x64\steamwebhelper.exe" --type=gpu-process --field-trial-handle=1548,12844185525726416292,13895313278188952831,131072 --enable-features=CastMediaRouteProvider --disable-gpu-sandbox --use-gl=disabled --gpu-vendor-id=4318 --gpu-device-id=9353 --gpu-sub-system-id=3379696738 --gpu-revision=161 --gpu-driver-version=31.0.15.2802 --log-file="E:\steam\bin\cef\cef.win7x64\debug.log" --product-version="Valve Steam Client" --lang=ko-KR /prefetch:2
