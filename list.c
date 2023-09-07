@@ -21,6 +21,7 @@ void AddData(List *list,void *data){
 	
 	list->tail->next=newNode;
 	list->tail=newNode;
+//	printf("add data: %s\n",(char *)data);
 }
 char MoveNext(List *list){
 	if(!list->cur->next){
@@ -43,14 +44,24 @@ void FreeList(List *list){
 		list->cur=tnode;
 	}
 }
-void RemoveData(List *list,int index){
+void *RemoveData(List *list,int index){
 	int i;
+	void *data;
+	Node *target;
 	ReturnToHead(list);
 	for(i=0;i<index;i++){
 		MoveNext(list);
 	}
-	free(list->cur->next);
+	
+	target=list->cur->next;
+	data=list->cur->next->data;
 	list->cur->next=list->cur->next->next;
+	free(target);
+	
+	if(!list->cur->next){
+		list->tail=list->cur;
+	}
+	return data;
 }
 char FindData(List *list,void *data,char (*Compare)(void *data1,void *data2)){
 	ReturnToHead(list);

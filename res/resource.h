@@ -21,3 +21,12 @@
 #define DLG_PB_BAR                              60000
 #define DLG_PB_CANCEL                           60001
 #define DLG_ST_LOG                              60002
+
+#define IDD_DIALOG_ADDITEM						400
+#define ADDITEM_ED_PATH							40000
+#define ADDITEM_BT_CANCLE						40001
+#define ADDITEM_BT_OK							40002
+#define ADDITEM_ED_PARAM						40003
+#define ADDITEM_BT_POSITION						40004
+#define ADDITEM_BT_FIND							40005
+#define ADDITEM_ED_TITLE						40006

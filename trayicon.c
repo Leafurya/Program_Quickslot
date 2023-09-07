@@ -44,20 +44,9 @@ HMENU CreateTrayMenu(QuickSlot *slot,HMENU *slotMenu){
 	for(i=0;i<KEYCOUNT;i++){
 		slotMenu[i]=CreatePopupMenu();
 		opened=0;
-		
-//		printf("strlen(slot[i].slotName): %d\n",strlen(slot[i].slotName));
 //		printf("slot[i].slotName: %s\n",slot[i].slotName);
 		if(strlen(slot[i].slotName)){
 			opened=IsSlotOpened(slot[i]);
-//			if(opened=IsSlotOpened(slot[i])){
-//				sprintf(str,"¶ç¿ì±â(shift+ctrl+F%d)\0",i+1);
-//				AppendMenu(slotMenu[i],MF_STRING,(UINT_PTR)(MAKEWPARAM(WM_FOREGROUND_SLOT,i)),str);
-//				//AppendMenu(slotMenu[i],MF_STRING,(UINT_PTR)(MAKEWPARAM(WM_CLOSE_SLOT,i)),"´Ý±â");
-//			}
-//			else{
-//				sprintf(str,"Àü°³(shift+ctrl+F%d)\0",i+1);
-//				AppendMenu(slotMenu[i],MF_STRING,(UINT_PTR)(MAKEWPARAM(WM_OPEN_SLOT,i)),str);
-//			}
 			AppendMenu(slotMenu[i],opened?MF_STRING:MF_STRING|MF_DISABLED,(UINT_PTR)(MAKEWPARAM(WM_CLOSE_SLOT,i)),"´Ý±â");
 			AppendMenu(slotMenu[i],MF_STRING,(UINT_PTR)(MAKEWPARAM(WM_SLOT_PROPERTY,i)),"¼Ó¼º");
 		}
@@ -66,6 +55,7 @@ HMENU CreateTrayMenu(QuickSlot *slot,HMENU *slotMenu){
 		}
 		
 		sprintf(str,"F%d %s\0",i+1,strlen(slot[i].slotName)?slot[i].slotName:"ºó½½·Ô");
+//		printf("tray slot name: %s\n",str);
 		AppendMenu(main,MF_POPUP|(opened?MF_CHECKED:MF_UNCHECKED),(UINT_PTR)slotMenu[i],str);
 	}
 	
