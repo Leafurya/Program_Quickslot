@@ -400,6 +400,10 @@ void SaveCtrlsCommandFunc(WPARAM wParam,LPARAM lParam){
 			break;
 		case SAVECTRLS_BT_MODI:
 			//itemIndex=SendMessage(sc.liItems,LB_GETCURSEL,0,0);
+			if(SendMessage(sc.liItems,LB_GETSELCOUNT,0,0)!=1){
+				MessageBox(mainWnd,"하나의 아아템을 선택해 주세요.","알림",MB_OK);
+				break;
+			}
 			if(itemIndex==-1){
 				MessageBox(mainWnd,"아이템을 선택해주세요.","알림",MB_OK);
 				break;
