@@ -17,6 +17,7 @@
 #include "progressbar.h"
 #include "thread.h"
 #include "log.h"
+#include "system.h"
 
 //#define TIMER_INPUT	0
 #define WM_FINDWINDOW	WM_USER+4
@@ -98,14 +99,21 @@ int APIENTRY WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance
 //	AllocConsole(); 
 //	freopen("COIN$", "r", stdin);
 //	freopen("CONOUT$", "w", stdout);
-//	freopen("CONOUT$", "w", stderr); 
+//	freopen("CONOUT$", "w", stderr);
+	SetStartProgram(); 
 	
+
 	if(!opendir("./data")){
 		mkdir("./data");
 	}
 	CheckVersion();
 	if(!LoadQuickslot(&quickslot,sizeof(quickslot))){
+		printf("fail load\n");
 		memset(quickslot,0,sizeof(quickslot));
+	}
+	else{
+		printf("success load\n");
+		ShowSlotData(quickslot);
 	}
 //	ShowSlotData(quickslot);
 //	quickslot[0].item[0].winTitle;
@@ -245,6 +253,7 @@ LRESULT CALLBACK MainWndProc(HWND hWnd,UINT iMessage,WPARAM wParam,LPARAM lParam
 				}
 				saving=0;
 			}
+			SaveQuickslot(quickslot,sizeof(quickslot));
 			ShowWindow(hWnd,SW_HIDE);
 			return 0;
 		case WM_DESTROY:
@@ -827,6 +836,10 @@ unsigned __stdcall ObserveSlotThreadFunc(void *args){
 	while(threadKiller){
 		for(i=0;i<slot->itemCount;i++){
 			hWnd=&slot->item[i].hWnd;
+			if(!strlen(slot->item[i].winTitle)||!strcmp("-",slot->item[i].winTitle)){
+				GetWindowText(*hWnd,slot->item[i].winTitle,sizeof(slot->item[i].winTitle));
+//				printf("%s\n",slot->item[i].winTitle);
+			}
 			if(!GetWindowThreadProcessId(*hWnd,&pID)){
 				*hWnd=0;
 				continue;

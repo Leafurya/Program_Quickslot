@@ -5,6 +5,8 @@
 #include <shellapi.h>
 #include <psapi.h>
 #include <time.h>
+#include <errno.h>
+#include <unistd.h>
 
 #include "list.h"
 #include "progressbar.h"
@@ -190,9 +192,19 @@ int GetSlotIndex(int key){
 
 
 char LoadQuickslot(QuickSlot (*pQuickslot)[KEYCOUNT],int size){
-	FILE *file=fopen("data/slot","rb");
+	FILE *file;
+	char path[MAX_PATH];
+	
+	
+	GetModuleFileName(NULL,path,sizeof(path));
+	path[strlen(path)-strlen("program_quickslot.exe")]=0;
+	sprintf(path,"%sdata\\slot",path);
+	printf("path: %s\n",path);
+	
+	file=fopen(path,"rb");
 	
 	if(file==NULL){
+		printf("%s\n",strerror(errno));
 		return 0;
 	}
 	
@@ -200,6 +212,9 @@ char LoadQuickslot(QuickSlot (*pQuickslot)[KEYCOUNT],int size){
 	fread(pQuickslot,size,1,file);
 	
 	fclose(file);
+	
+	getcwd(path,sizeof(path));
+	printf("%s\n",path);
 	
 	return 1;
 }
@@ -216,8 +231,16 @@ char LoadQuickslot(QuickSlot (*pQuickslot)[KEYCOUNT],int size){
 //	return 1;
 //}
 char SaveQuickslot(QuickSlot *pQuickslot,int size){
-	FILE *file=fopen("data/slot","wb");
+	FILE *file;
+	char path[MAX_PATH];
 	char version=NOW_DATA_VERSION;
+	
+	GetModuleFileName(NULL,path,sizeof(path));
+	path[strlen(path)-strlen("program_quickslot.exe")]=0;
+	sprintf(path,"%sdata\\slot",path);
+	printf("path: %s\n",path);
+	
+	file=fopen("data/slot","wb");
 	
 	if(file==NULL){
 		return 0;
@@ -438,9 +461,7 @@ void CheckVersion(){
 //			printf("3\n");
 			Sleep(1);
 		}while(!item->hWnd);
-		if(!strlen(item->winTitle)){
-			GetWindowText(item->hWnd,item->winTitle,sizeof(item->winTitle));
-		}
+		
 		LogMessage(GetString("프로그램 감지 성공(%s)",item->winTitle));
 //		printf("found %s\n",item->name);
 		return 0;
@@ -695,6 +716,9 @@ char SpreadQuickslot(QuickSlot *pOriginSlot,int slotIndex,char *status[ITEM_MAXS
 			Sleep(10);
 			StepBar();
 		}
+//		printf("title: %s|%d\n",items[i].winTitle,strlen(items[i].winTitle));
+//		
+//		printf("after title: %s|%d\n",items[i].winTitle,strlen(items[i].winTitle));
 		memcpy(pOriginSlot[slotIndex].item,items,sizeof(pOriginSlot[slotIndex].item));
 		FreeList(&list);
 		return 0;
