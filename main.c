@@ -100,7 +100,7 @@ int APIENTRY WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance
 //	freopen("COIN$", "r", stdin);
 //	freopen("CONOUT$", "w", stdout);
 //	freopen("CONOUT$", "w", stderr);
-	SetStartProgram(); 
+//	SetStartProgram(); 
 	
 
 	if(!opendir("./data")){
@@ -115,7 +115,7 @@ int APIENTRY WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance
 		printf("success load\n");
 		ShowSlotData(quickslot);
 	}
-//	ShowSlotData(quickslot);
+	ShowSlotData(quickslot);
 //	quickslot[0].item[0].winTitle;
 	
 	hWnd=CreateWindow(mainWndClass,mainWndClass,WS_OVERLAPPEDWINDOW,

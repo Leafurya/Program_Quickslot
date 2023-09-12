@@ -213,8 +213,7 @@ char LoadQuickslot(QuickSlot (*pQuickslot)[KEYCOUNT],int size){
 	
 	fclose(file);
 	
-	getcwd(path,sizeof(path));
-	printf("%s\n",path);
+	
 	
 	return 1;
 }
@@ -316,13 +315,22 @@ void CheckVersion(){
 	void *oldData;
 	QuickSlot *newData;
 	int i,j;
+	int fileSize;
 	
 	if(!file){
 		return;
 	}
+	fseek(file,0,SEEK_END);
+//	printf("file size: %d\n",ftell(file));
+	if(!ftell(file)){
+		fwrite(0,sizeof(QuickSlot),1,file);
+		fclose(file);
+		return;
+	}
+	rewind(file);
 	fread(&version,1,1,file);
 	
-//	printf("data version: %d\n",version);
+	printf("data version: %d\n",version);
 	if(NOW_DATA_VERSION==version){
 		fclose(file);
 		return;
