@@ -2,9 +2,9 @@
 Order=0,12,11,4,2,8,6,10,9,3,1,13,14,5,15,16,17,18,7,19,20
 Focused=4
 [Editor_0]
-CursorCol=22
-CursorRow=261
-TopLine=184
+CursorCol=11
+CursorRow=110
+TopLine=82
 LeftChar=1
 [Editor_1]
 CursorCol=21
@@ -22,9 +22,9 @@ CursorRow=33
 TopLine=1
 LeftChar=1
 [Editor_4]
-CursorCol=37
-CursorRow=474
-TopLine=418
+CursorCol=12
+CursorRow=208
+TopLine=184
 LeftChar=1
 [Editor_5]
 CursorCol=29

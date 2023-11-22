@@ -239,7 +239,7 @@ char SaveQuickslot(QuickSlot *pQuickslot,int size){
 	sprintf(path,"%sdata\\slot",path);
 	printf("path: %s\n",path);
 	
-	file=fopen("data/slot","wb");
+	file=fopen(path,"wb");
 	
 	if(file==NULL){
 		return 0;
